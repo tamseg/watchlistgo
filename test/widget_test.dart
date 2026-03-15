@@ -5,7 +5,7 @@ import 'package:watchlistgo/app.dart';
 
 void main() {
   testWidgets('App loads smoke test', (WidgetTester tester) async {
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(const WatchlistGo());
     expect(find.byType(MaterialApp), findsOneWidget);
   });
 }

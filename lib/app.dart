@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'theme/app_theme.dart';
 import 'screens/home_page.dart';
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class WatchlistGo extends StatelessWidget {
+  const WatchlistGo({super.key});
 
   @override
   Widget build(BuildContext context) {
