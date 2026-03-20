@@ -37,6 +37,29 @@ class _WatchlistPageState extends State<WatchlistPage>
     super.dispose();
   }
 
+  Widget _buildEmptyState(String type) {
+    final IconData icon = type == 'Series' ? Icons.tv : Icons.movie;
+
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 64, color: AppTheme.metaIconColor.withValues(alpha: 0.5)),
+          const SizedBox(height: 16),
+          Text(
+            'Your ${type.toLowerCase()} watchlist is empty.',
+            style: const TextStyle(color: AppTheme.metaIconColor, fontSize: 16),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Go to Search to find your favorites!',
+            style: TextStyle(color: AppTheme.metaIconColor, fontSize: 16),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -83,42 +106,46 @@ class _WatchlistPageState extends State<WatchlistPage>
       body: TabBarView(
         controller: _tabController,
         children: [
-          ListView(
-            padding: const EdgeInsets.only(
-              left: 14.0,
-              right: 14.0,
-              top: 24.0,
-              bottom: 24.0,
-            ),
-            children: widget.followedSeriesIds.map((id) {
-              return Padding(
-                key: ValueKey('series_$id'),
-                padding: const EdgeInsets.only(bottom: 6.0),
-                child: SeriesCard(
-                  seriesId: id,
-                  onRemove: () => widget.onRemoveSeries(id),
+          widget.followedSeriesIds.isEmpty
+              ? _buildEmptyState('Series')
+              : ListView(
+                  padding: const EdgeInsets.only(
+                    left: 14.0,
+                    right: 14.0,
+                    top: 24.0,
+                    bottom: 24.0,
+                  ),
+                  children: widget.followedSeriesIds.map((id) {
+                    return Padding(
+                      key: ValueKey('series_$id'),
+                      padding: const EdgeInsets.only(bottom: 6.0),
+                      child: SeriesCard(
+                        seriesId: id,
+                        onRemove: () => widget.onRemoveSeries(id),
+                      ),
+                    );
+                  }).toList(),
                 ),
-              );
-            }).toList(),
-          ),
-          ListView(
-            padding: const EdgeInsets.only(
-              left: 14.0,
-              right: 14.0,
-              top: 24.0,
-              bottom: 24.0,
-            ),
-            children: widget.followedMoviesIds.map((id) {
-              return Padding(
-                key: ValueKey('movie_$id'),
-                padding: const EdgeInsets.only(bottom: 6.0),
-                child: MovieCard(
-                  movieId: id,
-                  onRemove: () => widget.onRemoveMovie(id),
+          widget.followedMoviesIds.isEmpty
+              ? _buildEmptyState('Movies')
+              : ListView(
+                  padding: const EdgeInsets.only(
+                    left: 14.0,
+                    right: 14.0,
+                    top: 24.0,
+                    bottom: 24.0,
+                  ),
+                  children: widget.followedMoviesIds.map((id) {
+                    return Padding(
+                      key: ValueKey('movie_$id'),
+                      padding: const EdgeInsets.only(bottom: 6.0),
+                      child: MovieCard(
+                        movieId: id,
+                        onRemove: () => widget.onRemoveMovie(id),
+                      ),
+                    );
+                  }).toList(),
                 ),
-              );
-            }).toList(),
-          ),
         ],
       ),
     );
