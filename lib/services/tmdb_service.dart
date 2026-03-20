@@ -11,6 +11,23 @@ class TMDBService {
     'Content-Type': 'application/json;charset=utf-8',
   };
 
+  Future<List<Map<String, dynamic>>> searchMulti(String query) async {
+    final response = await http.get(
+      Uri.parse('$_baseUrl/search/multi?query=${Uri.encodeComponent(query)}'),
+      headers: _headers,
+    );
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      final results = data['results'] as List;
+      return results
+          .cast<Map<String, dynamic>>()
+          .where((item) => item['media_type'] != 'person')
+          .toList();
+    }
+    return [];
+  }
+
   Future<Map<String, dynamic>?> searchSeries(String query) async {
     final response = await http.get(
       Uri.parse('$_baseUrl/search/tv?query=${Uri.encodeComponent(query)}'),

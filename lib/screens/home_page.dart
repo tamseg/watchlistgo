@@ -3,6 +3,7 @@ import '../theme/app_theme.dart';
 import 'watchlist_page.dart';
 import 'search_page.dart';
 import 'profile_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -14,10 +15,52 @@ class _HomePageState extends State<HomePage> {
   late PageController _pageController;
   int _bottomNavIndex = 0;
 
+  List<int> followedSeriesIds = [];
+  List<int> followedMoviesIds = [];
+
+  Future<void> _loadPreferences() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      followedSeriesIds = (prefs.getStringList('followedSeriesIds') ?? [])
+          .map((id) => int.parse(id))
+          .toList();
+      followedMoviesIds = (prefs.getStringList('followedMoviesIds') ?? [])
+          .map((id) => int.parse(id))
+          .toList();
+    });
+  }
+
+  Future<void> _savePreferences() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList('followedSeriesIds',
+        followedSeriesIds.map((id) => id.toString()).toList());
+    await prefs.setStringList('followedMoviesIds',
+        followedMoviesIds.map((id) => id.toString()).toList());
+  }
+
+  void _addSeries(int id) {
+    if (!followedSeriesIds.contains(id)) {
+      setState(() {
+        followedSeriesIds.add(id);
+      });
+      _savePreferences();
+    }
+  }
+
+  void _addMovie(int id) {
+    if (!followedMoviesIds.contains(id)) {
+      setState(() {
+        followedMoviesIds.add(id);
+      });
+      _savePreferences();
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     _pageController = PageController();
+    _loadPreferences();
   }
 
   @override
@@ -36,10 +79,18 @@ class _HomePageState extends State<HomePage> {
             _bottomNavIndex = index;
           });
         },
-        children: const [
-          WatchlistPage(),
-          SearchPage(),
-          ProfilePage(),
+        children: [
+          WatchlistPage(
+            followedSeriesIds: followedSeriesIds,
+            followedMoviesIds: followedMoviesIds,
+          ),
+          SearchPage(
+            followedSeriesIds: followedSeriesIds,
+            followedMoviesIds: followedMoviesIds,
+            onAddSeries: _addSeries,
+            onAddMovie: _addMovie,
+          ),
+          const ProfilePage(),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(

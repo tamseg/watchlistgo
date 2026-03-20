@@ -1,12 +1,383 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import '../theme/app_theme.dart';
+import '../services/tmdb_service.dart';
+import '../widgets/scrolling_text.dart';
 
-class SearchPage extends StatelessWidget {
-  const SearchPage({super.key});
+class SearchPage extends StatefulWidget {
+  final List<int> followedSeriesIds;
+  final List<int> followedMoviesIds;
+  final void Function(int id) onAddSeries;
+  final void Function(int id) onAddMovie;
+
+  const SearchPage({
+    required this.followedSeriesIds,
+    required this.followedMoviesIds,
+    required this.onAddSeries,
+    required this.onAddMovie,
+    super.key,
+  });
+
+  @override
+  State<SearchPage> createState() => _SearchPageState();
+}
+
+class _SearchPageState extends State<SearchPage> {
+  final TextEditingController _searchController = TextEditingController();
+  final TMDBService _tmdbService = TMDBService();
+  Timer? _debounceTimer;
+  List<Map<String, dynamic>> _results = [];
+  bool _isLoading = false;
+  bool _hasSearched = false;
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _debounceTimer?.cancel();
+    super.dispose();
+  }
+
+  void _onSearchChanged(String query) {
+    _debounceTimer?.cancel();
+
+    if (query.trim().length < 3) {
+      setState(() {
+        _results = [];
+        _hasSearched = false;
+        _isLoading = false;
+      });
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    _debounceTimer = Timer(const Duration(milliseconds: 500), () {
+      _performSearch(query.trim());
+    });
+  }
+
+  Future<void> _performSearch(String query) async {
+    final results = await _tmdbService.searchMulti(query);
+    if (mounted) {
+      setState(() {
+        _results = results;
+        _isLoading = false;
+        _hasSearched = true;
+      });
+    }
+  }
+
+  bool _isAlreadyAdded(Map<String, dynamic> item) {
+    final id = item['id'] as int;
+    final mediaType = item['media_type'] as String;
+    if (mediaType == 'tv') {
+      return widget.followedSeriesIds.contains(id);
+    } else {
+      return widget.followedMoviesIds.contains(id);
+    }
+  }
+
+  void _addItem(Map<String, dynamic> item) {
+    final id = item['id'] as int;
+    final mediaType = item['media_type'] as String;
+    final title = mediaType == 'tv'
+        ? (item['name'] ?? 'Unknown')
+        : (item['title'] ?? 'Unknown');
+    final typeLabel = mediaType == 'tv' ? 'Series' : 'Movies';
+
+    if (mediaType == 'tv') {
+      widget.onAddSeries(id);
+    } else {
+      widget.onAddMovie(id);
+    }
+
+    setState(() {});
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        padding: EdgeInsets.zero,
+        duration: const Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 10.0),
+        content: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Flexible(
+              child: Container(
+                margin: const EdgeInsets.only(
+                  bottom: 8.0,
+                  top: 4.0,
+                  left: 4.0,
+                  right: 4.0,
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20.0,
+                  vertical: 12.0,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFB0E0E6),
+                  borderRadius: BorderRadius.circular(20.0),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Colors.black26,
+                      blurRadius: 4.0,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Text(
+                  'Added "$title" to $typeLabel',
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: AppTheme.darkTextColor),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: Text('Search Page coming soon...')),
+    return Scaffold(
+      appBar: AppBar(
+        centerTitle: true,
+        title: RichText(
+          text: const TextSpan(
+            style: AppTheme.appBarTitleStyle,
+            children: [
+              TextSpan(text: 'Search', style: AppTheme.watchlistPartStyle),
+            ],
+          ),
+        ),
+      ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 18.0,
+              vertical: 8.0,
+            ),
+            child: TextField(
+              controller: _searchController,
+              autofocus: true,
+              onChanged: _onSearchChanged,
+              decoration: InputDecoration(
+                hintText: 'Search movies & series...',
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: _searchController.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          _searchController.clear();
+                          _onSearchChanged('');
+                        },
+                      )
+                    : null,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.0),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12.0),
+                  borderSide: const BorderSide(
+                    color: AppTheme.primaryColor,
+                    width: 2.0,
+                  ),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 12.0,
+                ),
+              ),
+            ),
+          ),
+
+          Expanded(child: _buildBody()),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (!_hasSearched) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.search, size: 64, color: Colors.grey[400]),
+            const SizedBox(height: 16),
+            Text(
+              'Search for movies & series\nto add to your watchlist',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 16, color: Colors.grey[500]),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_results.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.search_off, size: 64, color: Colors.grey[400]),
+            const SizedBox(height: 16),
+            Text(
+              'No results found',
+              style: TextStyle(fontSize: 16, color: Colors.grey[500]),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.only(
+        left: 14.0,
+        right: 14.0,
+        top: 8.0,
+        bottom: 24.0,
+      ),
+      itemCount: _results.length,
+      itemBuilder: (context, index) {
+        final item = _results[index];
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 6.0),
+          child: _SearchResultCard(
+            item: item,
+            isAdded: _isAlreadyAdded(item),
+            onAdd: () => _addItem(item),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _SearchResultCard extends StatelessWidget {
+  final Map<String, dynamic> item;
+  final bool isAdded;
+  final VoidCallback onAdd;
+
+  const _SearchResultCard({
+    required this.item,
+    required this.isAdded,
+    required this.onAdd,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final mediaType = item['media_type'] as String;
+    final title = mediaType == 'tv'
+        ? (item['name'] ?? 'Unknown Title')
+        : (item['title'] ?? 'Unknown Title');
+    final posterPath = item['poster_path'];
+    final posterUrl = posterPath != null
+        ? 'https://image.tmdb.org/t/p/w200$posterPath'
+        : null;
+
+    final dateStr = mediaType == 'tv'
+        ? item['first_air_date']
+        : item['release_date'];
+    final year = (dateStr != null && dateStr.toString().length >= 4)
+        ? dateStr.toString().substring(0, 4)
+        : 'N/A';
+
+    final rating = item['vote_average'];
+    final ratingStr = rating != null ? rating.toStringAsFixed(1) : 'N/A';
+
+    final typeLabel = mediaType == 'tv' ? 'Series' : 'Movie';
+
+    return Card(
+      child: ListTile(
+        minTileHeight: AppTheme.cardHeight,
+        leading: posterUrl != null
+            ? SizedBox(
+                width: 50,
+                height: 50,
+                child: CachedNetworkImage(
+                  imageUrl: posterUrl,
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) =>
+                      Container(color: AppTheme.placeholderColor),
+                  errorWidget: (context, url, error) => const Icon(Icons.movie),
+                ),
+              )
+            : const Icon(Icons.movie),
+        title: ScrollingText(text: title),
+        subtitle: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 6.0,
+                vertical: 2.0,
+              ),
+              decoration: BoxDecoration(
+                color: mediaType == 'tv'
+                    ? AppTheme.episodeBadgeColor.withValues(alpha: 0.15)
+                    : AppTheme.primaryColor.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(4.0),
+              ),
+              child: Text(
+                typeLabel,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: mediaType == 'tv'
+                      ? AppTheme.episodeBadgeColor
+                      : AppTheme.primaryColor,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              year,
+              style: const TextStyle(
+                fontSize: 13,
+                color: AppTheme.secondaryTextColor,
+              ),
+            ),
+            const SizedBox(width: 6),
+            const Icon(Icons.star, size: 14, color: AppTheme.ratingStarColor),
+            const SizedBox(width: 2),
+            Text(
+              ratingStr,
+              style: const TextStyle(
+                fontSize: 13,
+                color: AppTheme.secondaryTextColor,
+              ),
+            ),
+          ],
+        ),
+        trailing: isAdded
+            ? TextButton.icon(
+                onPressed: null,
+                icon: const Icon(Icons.check, size: 18),
+                label: const Text('Added'),
+                style: TextButton.styleFrom(foregroundColor: Colors.grey),
+              )
+            : TextButton.icon(
+                onPressed: onAdd,
+                icon: const Icon(Icons.add, size: 18),
+                label: const Text('Add'),
+                style: TextButton.styleFrom(
+                  foregroundColor: AppTheme.primaryColor,
+                ),
+              ),
+      ),
     );
   }
 }

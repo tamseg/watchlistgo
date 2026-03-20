@@ -4,7 +4,14 @@ import '../widgets/series_card.dart';
 import '../widgets/movie_card.dart';
 
 class WatchlistPage extends StatefulWidget {
-  const WatchlistPage({super.key});
+  final List<int> followedSeriesIds;
+  final List<int> followedMoviesIds;
+
+  const WatchlistPage({
+    required this.followedSeriesIds,
+    required this.followedMoviesIds,
+    super.key,
+  });
   @override
   State<WatchlistPage> createState() => _WatchlistPageState();
 }
@@ -12,8 +19,6 @@ class WatchlistPage extends StatefulWidget {
 class _WatchlistPageState extends State<WatchlistPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  List<int> followedSeriesIds = [95479];
-  List<int> followedMoviesIds = [671];
 
   @override
   void initState() {
@@ -74,19 +79,25 @@ class _WatchlistPageState extends State<WatchlistPage>
         controller: _tabController,
         children: [
           ListView.builder(
-            padding: const EdgeInsets.only(left: 14.0, right: 14.0, top: 24.0),
-            itemCount: followedSeriesIds.length,
+            padding: const EdgeInsets.only(left: 14.0, right: 14.0, top: 24.0, bottom: 24.0),
+            itemCount: widget.followedSeriesIds.length,
             itemBuilder: (context, index) {
-              final id = followedSeriesIds[index];
-              return SeriesCard(seriesId: id);
+              final id = widget.followedSeriesIds[index];
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 6.0),
+                child: SeriesCard(seriesId: id),
+              );
             },
           ),
           ListView.builder(
-            padding: const EdgeInsets.only(left: 14.0, right: 14.0, top: 24.0),
-            itemCount: followedMoviesIds.length,
+            padding: const EdgeInsets.only(left: 14.0, right: 14.0, top: 24.0, bottom: 24.0),
+            itemCount: widget.followedMoviesIds.length,
             itemBuilder: (context, index) {
-              final id = followedMoviesIds[index];
-              return MovieCard(movieId: id);
+              final id = widget.followedMoviesIds[index];
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 6.0),
+                child: MovieCard(movieId: id),
+              );
             },
           ),
         ],
