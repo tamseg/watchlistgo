@@ -7,10 +7,14 @@ import '../widgets/custom_tab_bar.dart';
 class WatchlistPage extends StatefulWidget {
   final List<int> followedSeriesIds;
   final List<int> followedMoviesIds;
+  final void Function(int id) onRemoveSeries;
+  final void Function(int id) onRemoveMovie;
 
   const WatchlistPage({
     required this.followedSeriesIds,
     required this.followedMoviesIds,
+    required this.onRemoveSeries,
+    required this.onRemoveMovie,
     super.key,
   });
   @override
@@ -79,37 +83,41 @@ class _WatchlistPageState extends State<WatchlistPage>
       body: TabBarView(
         controller: _tabController,
         children: [
-          ListView.builder(
+          ListView(
             padding: const EdgeInsets.only(
               left: 14.0,
               right: 14.0,
               top: 24.0,
               bottom: 24.0,
             ),
-            itemCount: widget.followedSeriesIds.length,
-            itemBuilder: (context, index) {
-              final id = widget.followedSeriesIds[index];
+            children: widget.followedSeriesIds.map((id) {
               return Padding(
+                key: ValueKey('series_$id'),
                 padding: const EdgeInsets.only(bottom: 6.0),
-                child: SeriesCard(seriesId: id),
+                child: SeriesCard(
+                  seriesId: id,
+                  onRemove: () => widget.onRemoveSeries(id),
+                ),
               );
-            },
+            }).toList(),
           ),
-          ListView.builder(
+          ListView(
             padding: const EdgeInsets.only(
               left: 14.0,
               right: 14.0,
               top: 24.0,
               bottom: 24.0,
             ),
-            itemCount: widget.followedMoviesIds.length,
-            itemBuilder: (context, index) {
-              final id = widget.followedMoviesIds[index];
+            children: widget.followedMoviesIds.map((id) {
               return Padding(
+                key: ValueKey('movie_$id'),
                 padding: const EdgeInsets.only(bottom: 6.0),
-                child: MovieCard(movieId: id),
+                child: MovieCard(
+                  movieId: id,
+                  onRemove: () => widget.onRemoveMovie(id),
+                ),
               );
-            },
+            }).toList(),
           ),
         ],
       ),

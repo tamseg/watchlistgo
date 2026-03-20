@@ -17,26 +17,27 @@ class _HomePageState extends State<HomePage> {
 
   List<int> followedSeriesIds = [];
   List<int> followedMoviesIds = [];
+  SharedPreferences? _prefs;
 
-  Future<void> _loadPreferences() async {
-    final prefs = await SharedPreferences.getInstance();
+  Future<void> _initPrefs() async {
+    _prefs = await SharedPreferences.getInstance();
     setState(() {
-      followedSeriesIds = (prefs.getStringList('followedSeriesIds') ?? [])
+      followedSeriesIds = (_prefs!.getStringList('followedSeriesIds') ?? [])
           .map((id) => int.parse(id))
           .toList();
-      followedMoviesIds = (prefs.getStringList('followedMoviesIds') ?? [])
+      followedMoviesIds = (_prefs!.getStringList('followedMoviesIds') ?? [])
           .map((id) => int.parse(id))
           .toList();
     });
   }
 
   Future<void> _savePreferences() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(
+    if (_prefs == null) return;
+    await _prefs!.setStringList(
       'followedSeriesIds',
       followedSeriesIds.map((id) => id.toString()).toList(),
     );
-    await prefs.setStringList(
+    await _prefs!.setStringList(
       'followedMoviesIds',
       followedMoviesIds.map((id) => id.toString()).toList(),
     );
@@ -60,11 +61,29 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  void _removeSeries(int id) {
+    if (followedSeriesIds.contains(id)) {
+      setState(() {
+        followedSeriesIds.remove(id);
+      });
+      _savePreferences();
+    }
+  }
+
+  void _removeMovie(int id) {
+    if (followedMoviesIds.contains(id)) {
+      setState(() {
+        followedMoviesIds.remove(id);
+      });
+      _savePreferences();
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     _pageController = PageController();
-    _loadPreferences();
+    _initPrefs();
   }
 
   @override
@@ -87,6 +106,8 @@ class _HomePageState extends State<HomePage> {
           WatchlistPage(
             followedSeriesIds: followedSeriesIds,
             followedMoviesIds: followedMoviesIds,
+            onRemoveSeries: _removeSeries,
+            onRemoveMovie: _removeMovie,
           ),
           SearchPage(
             followedSeriesIds: followedSeriesIds,

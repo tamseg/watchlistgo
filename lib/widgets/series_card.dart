@@ -3,10 +3,17 @@ import '../theme/app_theme.dart';
 import '../services/tmdb_service.dart';
 import '../screens/series_detail_page.dart';
 import 'media_card.dart';
+import 'action_menu.dart';
 
 class SeriesCard extends StatefulWidget {
   final int seriesId;
-  const SeriesCard({required this.seriesId, super.key});
+  final VoidCallback onRemove;
+
+  const SeriesCard({
+    required this.seriesId,
+    required this.onRemove,
+    super.key,
+  });
 
   @override
   State<SeriesCard> createState() => _SeriesCardState();
@@ -74,12 +81,7 @@ class _SeriesCardState extends State<SeriesCard> {
           title: seriesTitle,
           subtitle: episodeInfo,
           posterUrl: posterUrl,
-          trailing: IconButton(
-            icon: const Icon(Icons.more_vert),
-            onPressed: () {
-              // Menu action coming soon
-            },
-          ),
+          trailing: ActionMenu(onRemove: widget.onRemove),
           onTap: () {
             Navigator.push(
               context,

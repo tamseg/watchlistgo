@@ -3,10 +3,17 @@ import '../theme/app_theme.dart';
 import '../services/tmdb_service.dart';
 import '../screens/movie_detail_page.dart';
 import 'media_card.dart';
+import 'action_menu.dart';
 
 class MovieCard extends StatefulWidget {
   final int movieId;
-  const MovieCard({required this.movieId, super.key});
+  final VoidCallback onRemove;
+
+  const MovieCard({
+    required this.movieId,
+    required this.onRemove,
+    super.key,
+  });
 
   @override
   State<MovieCard> createState() => _MovieCardState();
@@ -60,12 +67,7 @@ class _MovieCardState extends State<MovieCard> {
           title: movieTitle,
           subtitle: 'Released: $releaseDate',
           posterUrl: posterUrl,
-          trailing: IconButton(
-            icon: const Icon(Icons.more_vert),
-            onPressed: () {
-              // Menu action coming soon
-            },
-          ),
+          trailing: ActionMenu(onRemove: widget.onRemove),
           onTap: () {
             Navigator.push(
               context,
