@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import '../theme/app_theme.dart';
 import '../services/tmdb_service.dart';
 import '../screens/series_detail_page.dart';
-import 'scrolling_text.dart';
+import 'media_card.dart';
 
 class SeriesCard extends StatefulWidget {
   final int seriesId;
@@ -71,41 +70,25 @@ class _SeriesCardState extends State<SeriesCard> {
           episodeInfo = 'Last: S${s}E$e - $date';
         }
 
-        return Card(
-          child: ListTile(
-            minTileHeight: AppTheme.cardHeight,
-            leading: posterUrl != null
-                ? SizedBox(
-                    width: 50,
-                    height: 50,
-                    child: CachedNetworkImage(
-                      imageUrl: posterUrl,
-                      fit: BoxFit.cover,
-                      placeholder: (context, url) =>
-                          Container(color: AppTheme.placeholderColor),
-                      errorWidget: (context, url, error) =>
-                          const Icon(Icons.movie),
-                    ),
-                  )
-                : const Icon(Icons.movie),
-            title: ScrollingText(text: seriesTitle),
-            subtitle: ScrollingText(text: episodeInfo),
-            trailing: IconButton(
-              icon: const Icon(Icons.more_vert),
-              onPressed: () {
-                // Menu action coming soon
-              },
-            ),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) =>
-                      SeriesDetailPage(seriesId: widget.seriesId),
-                ),
-              );
+        return MediaCard(
+          title: seriesTitle,
+          subtitle: episodeInfo,
+          posterUrl: posterUrl,
+          trailing: IconButton(
+            icon: const Icon(Icons.more_vert),
+            onPressed: () {
+              // Menu action coming soon
             },
           ),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) =>
+                    SeriesDetailPage(seriesId: widget.seriesId),
+              ),
+            );
+          },
         );
       },
     );

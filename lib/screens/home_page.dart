@@ -32,10 +32,14 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _savePreferences() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList('followedSeriesIds',
-        followedSeriesIds.map((id) => id.toString()).toList());
-    await prefs.setStringList('followedMoviesIds',
-        followedMoviesIds.map((id) => id.toString()).toList());
+    await prefs.setStringList(
+      'followedSeriesIds',
+      followedSeriesIds.map((id) => id.toString()).toList(),
+    );
+    await prefs.setStringList(
+      'followedMoviesIds',
+      followedMoviesIds.map((id) => id.toString()).toList(),
+    );
   }
 
   void _addSeries(int id) {

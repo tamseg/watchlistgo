@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import '../theme/app_theme.dart';
 import '../services/tmdb_service.dart';
-import '../widgets/scrolling_text.dart';
+import '../widgets/custom_snackbar.dart';
+import '../widgets/media_card.dart';
 
 class SearchPage extends StatefulWidget {
   final List<int> followedSeriesIds;
@@ -96,53 +96,7 @@ class _SearchPageState extends State<SearchPage> {
 
     setState(() {});
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        padding: EdgeInsets.zero,
-        duration: const Duration(seconds: 2),
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 10.0),
-        content: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Flexible(
-              child: Container(
-                margin: const EdgeInsets.only(
-                  bottom: 8.0,
-                  top: 4.0,
-                  left: 4.0,
-                  right: 4.0,
-                ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20.0,
-                  vertical: 12.0,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFB0E0E6),
-                  borderRadius: BorderRadius.circular(20.0),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Colors.black26,
-                      blurRadius: 4.0,
-                      offset: Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Text(
-                  'Added "$title" to $typeLabel',
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: AppTheme.darkTextColor),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+    showCustomSnackBar(context, 'Added "$title" to $typeLabel');
   }
 
   @override
@@ -301,83 +255,65 @@ class _SearchResultCard extends StatelessWidget {
 
     final typeLabel = mediaType == 'tv' ? 'Series' : 'Movie';
 
-    return Card(
-      child: ListTile(
-        minTileHeight: AppTheme.cardHeight,
-        leading: posterUrl != null
-            ? SizedBox(
-                width: 50,
-                height: 50,
-                child: CachedNetworkImage(
-                  imageUrl: posterUrl,
-                  fit: BoxFit.cover,
-                  placeholder: (context, url) =>
-                      Container(color: AppTheme.placeholderColor),
-                  errorWidget: (context, url, error) => const Icon(Icons.movie),
-                ),
-              )
-            : const Icon(Icons.movie),
-        title: ScrollingText(text: title),
-        subtitle: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 6.0,
-                vertical: 2.0,
-              ),
-              decoration: BoxDecoration(
+    return MediaCard(
+      title: title,
+      posterUrl: posterUrl,
+      subtitleWidget: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
+            decoration: BoxDecoration(
+              color: mediaType == 'tv'
+                  ? AppTheme.episodeBadgeColor.withValues(alpha: 0.15)
+                  : AppTheme.primaryColor.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(4.0),
+            ),
+            child: Text(
+              typeLabel,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
                 color: mediaType == 'tv'
-                    ? AppTheme.episodeBadgeColor.withValues(alpha: 0.15)
-                    : AppTheme.primaryColor.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(4.0),
-              ),
-              child: Text(
-                typeLabel,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                  color: mediaType == 'tv'
-                      ? AppTheme.episodeBadgeColor
-                      : AppTheme.primaryColor,
-                ),
+                    ? AppTheme.episodeBadgeColor
+                    : AppTheme.primaryColor,
               ),
             ),
-            const SizedBox(width: 8),
-            Text(
-              year,
-              style: const TextStyle(
-                fontSize: 13,
-                color: AppTheme.secondaryTextColor,
-              ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            year,
+            style: const TextStyle(
+              fontSize: 13,
+              color: AppTheme.secondaryTextColor,
             ),
-            const SizedBox(width: 6),
-            const Icon(Icons.star, size: 14, color: AppTheme.ratingStarColor),
-            const SizedBox(width: 2),
-            Text(
-              ratingStr,
-              style: const TextStyle(
-                fontSize: 13,
-                color: AppTheme.secondaryTextColor,
-              ),
+          ),
+          const SizedBox(width: 6),
+          const Icon(Icons.star, size: 14, color: AppTheme.ratingStarColor),
+          const SizedBox(width: 2),
+          Text(
+            ratingStr,
+            style: const TextStyle(
+              fontSize: 13,
+              color: AppTheme.secondaryTextColor,
             ),
-          ],
-        ),
-        trailing: isAdded
-            ? TextButton.icon(
-                onPressed: null,
-                icon: const Icon(Icons.check, size: 18),
-                label: const Text('Added'),
-                style: TextButton.styleFrom(foregroundColor: Colors.grey),
-              )
-            : TextButton.icon(
-                onPressed: onAdd,
-                icon: const Icon(Icons.add, size: 18),
-                label: const Text('Add'),
-                style: TextButton.styleFrom(
-                  foregroundColor: AppTheme.primaryColor,
-                ),
-              ),
+          ),
+        ],
       ),
+      trailing: isAdded
+          ? TextButton.icon(
+              onPressed: null,
+              icon: const Icon(Icons.check, size: 18),
+              label: const Text('Added'),
+              style: TextButton.styleFrom(foregroundColor: Colors.grey),
+            )
+          : TextButton.icon(
+              onPressed: onAdd,
+              icon: const Icon(Icons.add, size: 18),
+              label: const Text('Add'),
+              style: TextButton.styleFrom(
+                foregroundColor: AppTheme.primaryColor,
+              ),
+            ),
     );
   }
 }

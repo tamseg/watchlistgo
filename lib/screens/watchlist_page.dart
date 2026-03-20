@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../widgets/series_card.dart';
 import '../widgets/movie_card.dart';
+import '../widgets/custom_tab_bar.dart';
 
 class WatchlistPage extends StatefulWidget {
   final List<int> followedSeriesIds;
@@ -64,7 +65,7 @@ class _WatchlistPageState extends State<WatchlistPage>
               height: AppTheme.tabContainerHeight,
               width: AppTheme.tabContainerWidth,
               decoration: AppTheme.tabTrackDecoration,
-              child: AppTheme.styledTabBar(
+              child: CustomTabBar(
                 controller: _tabController,
                 tabs: const [
                   Tab(text: 'Series'),
@@ -79,7 +80,12 @@ class _WatchlistPageState extends State<WatchlistPage>
         controller: _tabController,
         children: [
           ListView.builder(
-            padding: const EdgeInsets.only(left: 14.0, right: 14.0, top: 24.0, bottom: 24.0),
+            padding: const EdgeInsets.only(
+              left: 14.0,
+              right: 14.0,
+              top: 24.0,
+              bottom: 24.0,
+            ),
             itemCount: widget.followedSeriesIds.length,
             itemBuilder: (context, index) {
               final id = widget.followedSeriesIds[index];
@@ -90,7 +96,12 @@ class _WatchlistPageState extends State<WatchlistPage>
             },
           ),
           ListView.builder(
-            padding: const EdgeInsets.only(left: 14.0, right: 14.0, top: 24.0, bottom: 24.0),
+            padding: const EdgeInsets.only(
+              left: 14.0,
+              right: 14.0,
+              top: 24.0,
+              bottom: 24.0,
+            ),
             itemCount: widget.followedMoviesIds.length,
             itemBuilder: (context, index) {
               final id = widget.followedMoviesIds[index];

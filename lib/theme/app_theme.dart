@@ -109,27 +109,6 @@ class AppTheme {
 
   // ─── Helper Methods ──────────────────────────────────────────────
 
-  static Widget styledTabBar({
-    required TabController controller,
-    required List<Widget> tabs,
-  }) {
-    return TabBar(
-      controller: controller,
-      indicator: tabPillDecoration,
-      indicatorSize: TabBarIndicatorSize.tab,
-      indicatorPadding: tabIndicatorPadding,
-      dividerColor: Colors.transparent,
-      dividerHeight: 0,
-      labelPadding: EdgeInsets.zero,
-      tabAlignment: TabAlignment.fill,
-      overlayColor: WidgetStateProperty.all(Colors.transparent),
-      labelColor: Colors.white,
-      unselectedLabelColor: darkTextColor,
-      labelStyle: const TextStyle(fontWeight: FontWeight.bold),
-      tabs: tabs,
-    );
-  }
-
   /// Builds the gradient overlay used on backdrop images in detail pages.
   static List<Color> get backdropGradientColors => [
     backdropOverlayDark.withValues(alpha: 0.2),
