@@ -1,7 +1,7 @@
 name: watchlistgo
 description: "A new Flutter project."
 publish_to: "none"
-version: 1.0.0+2
+version: 1.0.0+3
 
 environment:
   sdk: ^3.9.2
@@ -9,6 +9,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_launcher_icons: ^0.13.1
 
   cupertino_icons: ^1.0.8
   http: ^1.6.0
@@ -26,3 +27,10 @@ flutter:
 
   assets:
     - assets/logo.webp
+    - assets/app_icon.webp
+
+flutter_icons:
+  android: "ic_launcher"
+  ios: true
+  image_path: "assets/app_icon.webp"
+  min_sdk_android: 21
