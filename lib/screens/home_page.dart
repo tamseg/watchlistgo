@@ -14,6 +14,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   late PageController _pageController;
   int _bottomNavIndex = 0;
+  final GlobalKey<SearchPageState> _searchPageKey = GlobalKey<SearchPageState>();
 
   List<int> followedSeriesIds = [];
   List<int> followedMoviesIds = [];
@@ -101,6 +102,15 @@ class _HomePageState extends State<HomePage> {
           setState(() {
             _bottomNavIndex = index;
           });
+          if (index == 1) {
+            Future.delayed(const Duration(milliseconds: 400), () {
+              if (_bottomNavIndex == 1) {
+                _searchPageKey.currentState?.requestSearchFocus();
+              }
+            });
+          } else {
+            _searchPageKey.currentState?.unfocusSearch();
+          }
         },
         children: [
           WatchlistPage(
@@ -110,6 +120,7 @@ class _HomePageState extends State<HomePage> {
             onRemoveMovie: _removeMovie,
           ),
           SearchPage(
+            key: _searchPageKey,
             followedSeriesIds: followedSeriesIds,
             followedMoviesIds: followedMoviesIds,
             onAddSeries: _addSeries,

@@ -20,11 +20,20 @@ class SearchPage extends StatefulWidget {
   });
 
   @override
-  State<SearchPage> createState() => _SearchPageState();
+  State<SearchPage> createState() => SearchPageState();
 }
 
-class _SearchPageState extends State<SearchPage> {
+class SearchPageState extends State<SearchPage> {
   final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
+
+  void requestSearchFocus() {
+    _searchFocusNode.requestFocus();
+  }
+
+  void unfocusSearch() {
+    _searchFocusNode.unfocus();
+  }
   final TMDBService _tmdbService = TMDBService();
   Timer? _debounceTimer;
   List<Map<String, dynamic>> _results = [];
@@ -34,6 +43,7 @@ class _SearchPageState extends State<SearchPage> {
   @override
   void dispose() {
     _searchController.dispose();
+    _searchFocusNode.dispose();
     _debounceTimer?.cancel();
     super.dispose();
   }
@@ -122,7 +132,7 @@ class _SearchPageState extends State<SearchPage> {
             ),
             child: TextField(
               controller: _searchController,
-              autofocus: true,
+              focusNode: _searchFocusNode,
               onChanged: _onSearchChanged,
               decoration: InputDecoration(
                 hintText: 'Search movies & series...',
