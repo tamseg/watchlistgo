@@ -14,7 +14,8 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   late PageController _pageController;
   int _bottomNavIndex = 0;
-  final GlobalKey<SearchPageState> _searchPageKey = GlobalKey<SearchPageState>();
+  final GlobalKey<SearchPageState> _searchPageKey =
+      GlobalKey<SearchPageState>();
 
   List<int> followedSeriesIds = [];
   List<int> followedMoviesIds = [];

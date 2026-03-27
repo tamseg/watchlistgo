@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "777174596362",
+    "project_id": "watchlistgo-88290",
+    "storage_bucket": "watchlistgo-88290.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:777174596362:android:2c2252acecd6bde59218f3",
+        "android_client_info": {
+          "package_name": "com.example.watchlistgo"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "777174596362-d8eeoqu2jtmr5algf6a8434q9ub1uavt.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.watchlistgo",
+            "certificate_hash": "25d119a7418441f14a9b670c64e28bc8710c88e8"
+          }
+        },
+        {
+          "client_id": "777174596362-4q70j6bb51qgv9rdmovtmf1hgrqa0baq.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCee4k9CmO2haoouacnrgV93JANw7cF-e4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "777174596362-4q70j6bb51qgv9rdmovtmf1hgrqa0baq.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "777174596362-mbbkomiq9rjau0v9k43v9pbrgqcc8n0f.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.watchlistgo"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

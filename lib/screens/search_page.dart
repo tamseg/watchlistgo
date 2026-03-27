@@ -34,6 +34,7 @@ class SearchPageState extends State<SearchPage> {
   void unfocusSearch() {
     _searchFocusNode.unfocus();
   }
+
   final TMDBService _tmdbService = TMDBService();
   Timer? _debounceTimer;
   List<Map<String, dynamic>> _results = [];

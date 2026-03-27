@@ -3,10 +3,7 @@ import 'package:flutter/material.dart';
 class ActionMenu extends StatelessWidget {
   final VoidCallback onRemove;
 
-  const ActionMenu({
-    super.key,
-    required this.onRemove,
-  });
+  const ActionMenu({super.key, required this.onRemove});
 
   @override
   Widget build(BuildContext context) {

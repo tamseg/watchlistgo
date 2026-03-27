@@ -9,11 +9,7 @@ class SeriesCard extends StatefulWidget {
   final int seriesId;
   final VoidCallback onRemove;
 
-  const SeriesCard({
-    required this.seriesId,
-    required this.onRemove,
-    super.key,
-  });
+  const SeriesCard({required this.seriesId, required this.onRemove, super.key});
 
   @override
   State<SeriesCard> createState() => _SeriesCardState();

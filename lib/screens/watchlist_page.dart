@@ -44,7 +44,11 @@ class _WatchlistPageState extends State<WatchlistPage>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 64, color: AppTheme.metaIconColor.withValues(alpha: 0.5)),
+          Icon(
+            icon,
+            size: 64,
+            color: AppTheme.metaIconColor.withValues(alpha: 0.5),
+          ),
           const SizedBox(height: 16),
           Text(
             'Your ${type.toLowerCase()} watchlist is empty.',

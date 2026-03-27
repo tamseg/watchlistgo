@@ -9,11 +9,7 @@ class MovieCard extends StatefulWidget {
   final int movieId;
   final VoidCallback onRemove;
 
-  const MovieCard({
-    required this.movieId,
-    required this.onRemove,
-    super.key,
-  });
+  const MovieCard({required this.movieId, required this.onRemove, super.key});
 
   @override
   State<MovieCard> createState() => _MovieCardState();
