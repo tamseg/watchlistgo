@@ -62,13 +62,19 @@ exports.checkAndNotify = functions.scheduler.onSchedule(
           const numSeasons = tv.number_of_seasons || 0;
           if (numSeasons > state.lastNotifiedSeason && numSeasons > 0)
           {
-             pushesToSend.push({
-               tokens: tvSubscribers[tvId],
-               title: `📺 ${tv.name}`,
-               body: `Season ${numSeasons} has been announced!`,
-               type: 'tv', id: String(tvId),
-               ...(tv.backdrop_path && { imageUrl: `https://image.tmdb.org/t/p/w500${tv.backdrop_path}` })
-             });
+             const latestSeason = (tv.seasons || []).find(s => s.season_number === numSeasons);
+             const airDate = latestSeason ? latestSeason.air_date : null;
+             const isPast = airDate && airDate < today;
+             if (stateSnap.exists && !isPast)
+             {
+               pushesToSend.push({
+                 tokens: tvSubscribers[tvId],
+                 title: `📺 ${tv.name}`,
+                 body: `Season ${numSeasons} has been announced!`,
+                 type: 'tv', id: String(tvId),
+                 ...(tv.backdrop_path && { imageUrl: `https://image.tmdb.org/t/p/w500${tv.backdrop_path}` })
+               });
+             }
              updatedState.lastNotifiedSeason = numSeasons;
           }
           const nextEpisode = tv.next_episode_to_air;
@@ -168,74 +174,3 @@ exports.checkAndNotify = functions.scheduler.onSchedule(
     } catch (e) { console.error('Critical error in checkAndNotify:', e); }
   }
 );
-
-exports.testPushNotification = functions.https.onRequest(
-  { region: 'europe-west3' },
-  async (req, res) => {
-  try {
-    const db = admin.firestore();
-    const usersSnap = await db.collection('users').get();
-    let sentCount = 0;
-
-    for (const doc of usersSnap.docs)
-    {
-      const data = doc.data();
-      if (!data.fcmToken)
-        continue;
-
-      const series = data.followedSeriesIds || [];
-      const movies = data.followedMoviesIds || [];
-
-      if (series.length > 0)
-      {
-        const tvId = series[0];
-        const tvRes = await tmdbApi.get(`/tv/${tvId}`);
-        const tv = tvRes.data;
-
-        await admin.messaging().send({
-          token: data.fcmToken,
-          notification: {
-            title: `📺 [TEST] ${tv.name}`,
-            body: `New Episode S1E1 airs today!`,
-            ...(tv.backdrop_path && { imageUrl: `https://image.tmdb.org/t/p/w500${tv.backdrop_path}` }),
-          },
-          data: { type: 'tv', id: String(tvId) },
-          android: {
-            notification: {
-              channelId: 'watchlstgo_notifications',
-            }
-          }
-        });
-        sentCount++;
-      }
-
-      if (movies.length > 0)
-      {
-        const movieId = movies[0];
-        const movieRes = await tmdbApi.get(`/movie/${movieId}`);
-        const movie = movieRes.data;
-
-        await admin.messaging().send({
-          token: data.fcmToken,
-          notification: {
-            title: `🎬 [TEST] ${movie.title}`,
-            body: `Now in theaters!`,
-            ...(movie.backdrop_path && { imageUrl: `https://image.tmdb.org/t/p/w500${movie.backdrop_path}` }),
-          },
-          data: { type: 'movie', id: String(movieId) },
-          android: {
-            notification: {
-              channelId: 'watchlstgo_notifications',
-            }
-          }
-        });
-        sentCount++;
-      }
-    }
-
-    res.status(200).send(`Sent ${sentCount} test notifications.`);
-  } catch (e) {
-    console.error('Test notification error:', e);
-    res.status(500).send(`Error: ${e.message}`);
-  }
-});
