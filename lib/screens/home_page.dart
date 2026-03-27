@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import '../services/watchlist_repository.dart';
 import 'watchlist_page.dart';
 import 'search_page.dart';
 import 'profile_page.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final WatchlistRepository repository;
+
+  const HomePage({super.key, required this.repository});
+
   @override
   State<HomePage> createState() => _HomePageState();
 }
@@ -19,74 +22,30 @@ class _HomePageState extends State<HomePage> {
 
   List<int> followedSeriesIds = [];
   List<int> followedMoviesIds = [];
-  SharedPreferences? _prefs;
-
-  Future<void> _initPrefs() async {
-    _prefs = await SharedPreferences.getInstance();
-    setState(() {
-      followedSeriesIds = (_prefs!.getStringList('followedSeriesIds') ?? [])
-          .map((id) => int.parse(id))
-          .toList();
-      followedMoviesIds = (_prefs!.getStringList('followedMoviesIds') ?? [])
-          .map((id) => int.parse(id))
-          .toList();
-    });
-  }
-
-  Future<void> _savePreferences() async {
-    if (_prefs == null) return;
-    await _prefs!.setStringList(
-      'followedSeriesIds',
-      followedSeriesIds.map((id) => id.toString()).toList(),
-    );
-    await _prefs!.setStringList(
-      'followedMoviesIds',
-      followedMoviesIds.map((id) => id.toString()).toList(),
-    );
-  }
-
-  void _addSeries(int id) {
-    if (!followedSeriesIds.contains(id)) {
-      setState(() {
-        followedSeriesIds.add(id);
-      });
-      _savePreferences();
-    }
-  }
-
-  void _addMovie(int id) {
-    if (!followedMoviesIds.contains(id)) {
-      setState(() {
-        followedMoviesIds.add(id);
-      });
-      _savePreferences();
-    }
-  }
-
-  void _removeSeries(int id) {
-    if (followedSeriesIds.contains(id)) {
-      setState(() {
-        followedSeriesIds.remove(id);
-      });
-      _savePreferences();
-    }
-  }
-
-  void _removeMovie(int id) {
-    if (followedMoviesIds.contains(id)) {
-      setState(() {
-        followedMoviesIds.remove(id);
-      });
-      _savePreferences();
-    }
-  }
 
   @override
   void initState() {
     super.initState();
     _pageController = PageController();
-    _initPrefs();
+
+    followedSeriesIds = widget.repository.currentSeriesIds.toList();
+    followedMoviesIds = widget.repository.currentMoviesIds.toList();
+
+    widget.repository.seriesStream.listen((ids) {
+      if (mounted) setState(() => followedSeriesIds = ids.toList());
+    });
+    widget.repository.moviesStream.listen((ids) {
+      if (mounted) setState(() => followedMoviesIds = ids.toList());
+    });
   }
+
+  void _addSeries(int id) => widget.repository.addSeries(id);
+
+  void _addMovie(int id) => widget.repository.addMovie(id);
+
+  void _removeSeries(int id) => widget.repository.removeSeries(id);
+
+  void _removeMovie(int id) => widget.repository.removeMovie(id);
 
   @override
   void dispose() {
@@ -127,7 +86,7 @@ class _HomePageState extends State<HomePage> {
             onAddSeries: _addSeries,
             onAddMovie: _addMovie,
           ),
-          const ProfilePage(),
+          ProfilePage(repository: widget.repository),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(

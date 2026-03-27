@@ -1,24 +1,27 @@
 import 'package:flutter/material.dart';
 import '../widgets/cloud_backup_card.dart';
+import '../services/watchlist_repository.dart';
 
 class ProfilePage extends StatelessWidget {
-  const ProfilePage({super.key});
+  final WatchlistRepository repository;
+
+  const ProfilePage({super.key, required this.repository});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Profile')),
-      body: const Padding(
-        padding: EdgeInsets.all(24.0),
+      body: Padding(
+        padding: const EdgeInsets.all(24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
+            const Text(
               'Settings',
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 48),
-            CloudBackupCard(),
+            const SizedBox(height: 48),
+            CloudBackupCard(repository: repository),
           ],
         ),
       ),

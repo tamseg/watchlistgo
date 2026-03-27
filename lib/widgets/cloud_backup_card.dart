@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/firebase_auth_service.dart';
 import '../services/firestore_database_service.dart';
+import '../services/watchlist_repository.dart';
 import 'custom_snackbar.dart';
 
 class CloudBackupCard extends StatefulWidget {
-  const CloudBackupCard({super.key});
+  final WatchlistRepository repository;
+
+  const CloudBackupCard({super.key, required this.repository});
 
   @override
   State<CloudBackupCard> createState() => _CloudBackupCardState();
@@ -13,11 +16,70 @@ class CloudBackupCard extends StatefulWidget {
 
 class _CloudBackupCardState extends State<CloudBackupCard> {
   late final FirebaseAuthService _authService;
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
     _authService = FirebaseAuthService(FirestoreDatabaseService());
+  }
+
+  Future<void> _handleLink(BuildContext ctx) async {
+    setState(() => _isLoading = true);
+    try {
+      final credential = await _authService.signInWithGoogle();
+      final uid = credential.user?.uid;
+      if (uid == null) return;
+
+      final result = await widget.repository.onAccountLinked(uid);
+
+      if (result == LinkResult.conflictNeedsConfirmation) {
+        if (!ctx.mounted) return;
+        final confirmed = await showDialog<bool>(
+          context: ctx,
+          builder: (dialogContext) => AlertDialog(
+            title: const Text('Replace local data?'),
+            content: const Text(
+              'This account already has watchlists. '
+              'Linking it will replace your current data with the data from this account.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext, false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext, true),
+                child: const Text('Replace'),
+              ),
+            ],
+          ),
+        );
+
+        if (confirmed == true) {
+          await widget.repository.confirmReplace(uid);
+        } else {
+          await _authService.signOut();
+        }
+      }
+    } catch (e) {
+      if (!ctx.mounted) return;
+      showCustomSnackBar(ctx, 'Link failed. Please try again.');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _handleUnlink(BuildContext ctx) async {
+    setState(() => _isLoading = true);
+    try {
+      await _authService.signOut();
+    } catch (e) {
+      if (!ctx.mounted) return;
+      showCustomSnackBar(ctx, 'Operation failed. Please try again.');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -53,28 +115,26 @@ class _CloudBackupCardState extends State<CloudBackupCard> {
                   style: const TextStyle(color: Colors.grey, height: 1.4),
                 ),
                 const SizedBox(height: 24),
-                ElevatedButton.icon(
-                  icon: Icon(isLinked ? Icons.cloud_off : Icons.link),
-                  label: Text(isLinked ? 'Disconnect Google Account' : 'Link Google Account'),
-                  onPressed: () async {
-                    try {
+                if (_isLoading)
+                  const CircularProgressIndicator()
+                else
+                  ElevatedButton.icon(
+                    icon: Icon(isLinked ? Icons.cloud_off : Icons.link),
+                    label: Text(isLinked ? 'Disconnect Google Account' : 'Link Google Account'),
+                    onPressed: () {
                       if (isLinked) {
-                        await _authService.signOut();
+                        _handleUnlink(builderContext);
                       } else {
-                        await _authService.signInWithGoogle();
+                        _handleLink(builderContext);
                       }
-                    } catch (e) {
-                      if (!builderContext.mounted) return;
-                      showCustomSnackBar(builderContext, 'Operation failed. Please try again.');
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                    },
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
                   ),
-                ),
               ],
             );
           },
