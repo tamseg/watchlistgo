@@ -7,6 +7,7 @@ import 'firestore_database_service.dart';
 import 'pending_sync_queue.dart';
 
 enum LinkResult { synced, merged, conflictNeedsConfirmation }
+enum SaveTarget { series, movies, all }
 
 class WatchlistRepository {
   static const _seriesKey = 'followedSeriesIds';
@@ -56,16 +57,28 @@ class WatchlistRepository {
     _moviesController.add(_moviesIds);
   }
 
-  Future<void> _saveLocal() async {
+  Future<void> _saveLocal({SaveTarget target = SaveTarget.all}) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(
-      _seriesKey,
-      _seriesIds.map((e) => e.toString()).toList(),
-    );
-    await prefs.setStringList(
-      _moviesKey,
-      _moviesIds.map((e) => e.toString()).toList(),
-    );
+    if (target == SaveTarget.series || target == SaveTarget.all) {
+      if (_seriesIds.isEmpty) {
+        await prefs.remove(_seriesKey);
+      } else {
+        await prefs.setStringList(
+          _seriesKey,
+          _seriesIds.map((e) => e.toString()).toList(),
+        );
+      }
+    }
+    if (target == SaveTarget.movies || target == SaveTarget.all) {
+      if (_moviesIds.isEmpty) {
+        await prefs.remove(_moviesKey);
+      } else {
+        await prefs.setStringList(
+          _moviesKey,
+          _moviesIds.map((e) => e.toString()).toList(),
+        );
+      }
+    }
   }
 
   String? get _uid => FirebaseAuth.instance.currentUser?.uid;
@@ -74,7 +87,7 @@ class WatchlistRepository {
     if (_seriesIds.contains(id)) return;
     _seriesIds.add(id);
     _seriesController.add(_seriesIds);
-    await _saveLocal();
+    await _saveLocal(target: SaveTarget.series);
     await _syncOp(SyncOperation(type: SyncOpType.addSeries, id: id));
   }
 
@@ -82,7 +95,7 @@ class WatchlistRepository {
     if (!_seriesIds.contains(id)) return;
     _seriesIds.remove(id);
     _seriesController.add(_seriesIds);
-    await _saveLocal();
+    await _saveLocal(target: SaveTarget.series);
     await _syncOp(SyncOperation(type: SyncOpType.removeSeries, id: id));
   }
 
@@ -90,7 +103,7 @@ class WatchlistRepository {
     if (_moviesIds.contains(id)) return;
     _moviesIds.add(id);
     _moviesController.add(_moviesIds);
-    await _saveLocal();
+    await _saveLocal(target: SaveTarget.movies);
     await _syncOp(SyncOperation(type: SyncOpType.addMovie, id: id));
   }
 
@@ -98,7 +111,7 @@ class WatchlistRepository {
     if (!_moviesIds.contains(id)) return;
     _moviesIds.remove(id);
     _moviesController.add(_moviesIds);
-    await _saveLocal();
+    await _saveLocal(target: SaveTarget.movies);
     await _syncOp(SyncOperation(type: SyncOpType.removeMovie, id: id));
   }
 
@@ -215,5 +228,26 @@ class WatchlistRepository {
     _connectivitySub?.cancel();
     _seriesController.close();
     _moviesController.close();
+  }
+
+  Future<void> clearLocalCache() async {
+    _seriesIds = [];
+    _moviesIds = [];
+    _seriesController.add(_seriesIds);
+    _moviesController.add(_moviesIds);
+    await _saveLocal();
+  }
+
+  Future<void> clearAll() async {
+    await clearLocalCache();
+    final uid = _uid;
+    if (uid != null) {
+      await _db.clearWatchlists(uid);
+    }
+  }
+
+  Future<void> forgetLocalLink() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_lastLinkedUidKey);
   }
 }

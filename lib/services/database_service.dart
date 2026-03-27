@@ -27,4 +27,8 @@ abstract class DatabaseService {
   Future<void> addMovie({required String uid, required int movieId});
 
   Future<void> removeMovie({required String uid, required int movieId});
+
+  Future<void> clearWatchlists(String uid);
+
+  Future<void> updateFcmToken({required String uid, required String? token});
 }

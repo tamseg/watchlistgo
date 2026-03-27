@@ -22,8 +22,6 @@ class FirestoreDatabaseService implements DatabaseService {
         'photoUrl': photoUrl,
         'createdAt': now,
         'updatedAt': now,
-        'followedSeriesIds': [],
-        'followedMoviesIds': [],
       });
     }
   }
@@ -104,19 +102,32 @@ class FirestoreDatabaseService implements DatabaseService {
 
   Future<void> setFollowedSeriesIds({required String uid, required List<int> ids}) async {
     await _firestore.collection('users').doc(uid).set({
-      'followedSeriesIds': ids,
+      'followedSeriesIds': ids.isEmpty ? FieldValue.delete() : ids,
     }, SetOptions(merge: true));
   }
 
   Future<void> setFollowedMoviesIds({required String uid, required List<int> ids}) async {
     await _firestore.collection('users').doc(uid).set({
-      'followedMoviesIds': ids,
+      'followedMoviesIds': ids.isEmpty ? FieldValue.delete() : ids,
     }, SetOptions(merge: true));
   }
 
+  @override
   Future<void> updateFcmToken({required String uid, required String? token}) async {
     await _firestore.collection('users').doc(uid).set({
       'fcmToken': token,
     }, SetOptions(merge: true));
+  }
+
+  @override
+  Future<void> clearWatchlists(String uid) async {
+    final docRef = _firestore.collection('users').doc(uid);
+    final docSnap = await docRef.get();
+    if (docSnap.exists) {
+      await docRef.update({
+        'followedSeriesIds': FieldValue.delete(),
+        'followedMoviesIds': FieldValue.delete(),
+      });
+    }
   }
 }
