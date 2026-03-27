@@ -113,4 +113,10 @@ class FirestoreDatabaseService implements DatabaseService {
       'followedMoviesIds': ids,
     }, SetOptions(merge: true));
   }
+
+  Future<void> updateFcmToken({required String uid, required String? token}) async {
+    await _firestore.collection('users').doc(uid).set({
+      'fcmToken': token,
+    }, SetOptions(merge: true));
+  }
 }

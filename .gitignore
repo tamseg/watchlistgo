@@ -46,3 +46,4 @@ app.*.map.json
 
 # User specific configuration
 TODO.md
+.env

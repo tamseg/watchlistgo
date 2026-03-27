@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../main.dart';
 import '../services/firebase_auth_service.dart';
 import '../services/firestore_database_service.dart';
 import '../services/watchlist_repository.dart';
@@ -58,9 +59,12 @@ class _CloudBackupCardState extends State<CloudBackupCard> {
 
         if (confirmed == true) {
           await widget.repository.confirmReplace(uid);
+          await _syncToken(uid);
         } else {
           await _authService.signOut();
         }
+      } else {
+        await _syncToken(uid);
       }
     } catch (e) {
       if (!ctx.mounted) return;
@@ -73,6 +77,10 @@ class _CloudBackupCardState extends State<CloudBackupCard> {
   Future<void> _handleUnlink(BuildContext ctx) async {
     setState(() => _isLoading = true);
     try {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid != null) {
+        await notificationService.updateStoredToken(null);
+      }
       await _authService.signOut();
     } catch (e) {
       if (!ctx.mounted) return;
@@ -80,6 +88,11 @@ class _CloudBackupCardState extends State<CloudBackupCard> {
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  Future<void> _syncToken(String uid) async {
+    final token = await notificationService.getToken();
+    await notificationService.updateStoredToken(token);
   }
 
   @override

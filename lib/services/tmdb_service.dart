@@ -2,11 +2,11 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class TMDBService {
   static const String _baseUrl = 'https://api.themoviedb.org/3';
-  static const String _accessToken =
-      'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI0MjlhMTkzODA0NGJkOGFiYmYwN2YxNWEwNTExNDNhOCIsIm5iZiI6MTc1OTI1MzAzMS41NTksInN1YiI6IjY4ZGMxMjI3YjQ1OWMyMTQyODJkZjUyYyIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.gmt_WiwIbszN9M8TcdYL4U7RPyeEHjytD1DEZ-En17E';
+  static String get _accessToken => dotenv.env['TMDB_ACCESS_TOKEN'] ?? '';
 
   static Map<String, String> get _headers => {
     'Authorization': 'Bearer $_accessToken',

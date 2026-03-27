@@ -3,6 +3,8 @@ import 'theme/app_theme.dart';
 import 'screens/home_page.dart';
 import 'services/watchlist_repository.dart';
 
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 class WatchlistGo extends StatelessWidget {
   final WatchlistRepository repository;
 
@@ -11,6 +13,7 @@ class WatchlistGo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       title: 'Watchlist Go',
       theme: AppTheme.lightTheme,
       home: HomePage(repository: repository),

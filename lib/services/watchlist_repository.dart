@@ -157,12 +157,10 @@ class WatchlistRepository {
     final cloudHasData = cloudSeries.isNotEmpty || cloudMovies.isNotEmpty;
     final localHasData = _seriesIds.isNotEmpty || _moviesIds.isNotEmpty;
 
-    // Scenario 4: Was linked to account A, now linking account B which has data
     if (wasLinkedToOther && cloudHasData && localHasData) {
       return LinkResult.conflictNeedsConfirmation;
     }
 
-    // Scenario 3: Local has data + cloud has data → merge
     if (localHasData && cloudHasData) {
       final mergedSeries = {..._seriesIds, ...cloudSeries}.toList();
       final mergedMovies = {..._moviesIds, ...cloudMovies}.toList();
@@ -180,13 +178,11 @@ class WatchlistRepository {
       return LinkResult.merged;
     }
 
-    // Scenario 1 & 2: Cloud is empty → upload local to cloud
     if (localHasData) {
       await _db.setFollowedSeriesIds(uid: uid, ids: _seriesIds);
       await _db.setFollowedMoviesIds(uid: uid, ids: _moviesIds);
     }
 
-    // Cloud has data but local doesn't → import cloud
     if (cloudHasData && !localHasData) {
       _seriesIds = cloudSeries;
       _moviesIds = cloudMovies;
