@@ -15,18 +15,23 @@ class MovieCard extends StatefulWidget {
   State<MovieCard> createState() => _MovieCardState();
 }
 
-class _MovieCardState extends State<MovieCard> {
+class _MovieCardState extends State<MovieCard>
+    with AutomaticKeepAliveClientMixin {
   late Future<Map<String, dynamic>?> _movieData;
   final TMDBService _tmdbService = TMDBService();
 
   @override
   void initState() {
     super.initState();
-    _movieData = _tmdbService.getMovieDetails(widget.movieId);
+    _movieData = _tmdbService.getDetails('movie', widget.movieId);
   }
 
   @override
+  bool get wantKeepAlive => true;
+
+  @override
   Widget build(BuildContext context) {
+    super.build(context);
     return FutureBuilder<Map<String, dynamic>?>(
       future: _movieData,
       builder: (context, snapshot) {

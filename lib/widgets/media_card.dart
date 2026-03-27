@@ -35,6 +35,8 @@ class MediaCard extends StatelessWidget {
                   child: CachedNetworkImage(
                     imageUrl: posterUrl!,
                     fit: BoxFit.cover,
+                    fadeInDuration: Duration.zero,
+                    fadeOutDuration: Duration.zero,
                     placeholder: (context, url) =>
                         Container(color: AppTheme.placeholderColor),
                     errorWidget: (context, url, error) =>

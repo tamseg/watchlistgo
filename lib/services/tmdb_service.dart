@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class TMDBService {
   static const String _baseUrl = 'https://api.themoviedb.org/3';
@@ -10,6 +12,27 @@ class TMDBService {
     'Authorization': 'Bearer $_accessToken',
     'Content-Type': 'application/json;charset=utf-8',
   };
+
+  Future<Map<String, dynamic>?> _cachedGet(String url, String cacheKey) async {
+    final prefs = await SharedPreferences.getInstance();
+
+    try {
+      final response = await http.get(Uri.parse(url), headers: _headers);
+      if (response.statusCode == 200) {
+        await prefs.setString(cacheKey, response.body);
+        return json.decode(response.body);
+      }
+      debugPrint('TMDB API returned status ${response.statusCode} for $cacheKey');
+    } catch (e) {
+      debugPrint('TMDB fetch failed for $cacheKey, falling back to cache: $e');
+    }
+
+    final cached = prefs.getString(cacheKey);
+    if (cached != null) {
+      return json.decode(cached);
+    }
+    return null;
+  }
 
   Future<List<Map<String, dynamic>>> searchMulti(String query) async {
     final response = await http.get(
@@ -44,51 +67,11 @@ class TMDBService {
     return null;
   }
 
-  Future<Map<String, dynamic>?> getTVDetails(int id) async {
-    final response = await http.get(
-      Uri.parse('$_baseUrl/tv/$id'),
-      headers: _headers,
-    );
-
-    if (response.statusCode == 200) {
-      return json.decode(response.body);
-    }
-    return null;
+  Future<Map<String, dynamic>?> getDetails(String type, int id) async {
+    return _cachedGet('$_baseUrl/$type/$id', 'tmdb_${type}_$id');
   }
 
-  Future<Map<String, dynamic>?> getMovieDetails(int id) async {
-    final response = await http.get(
-      Uri.parse('$_baseUrl/movie/$id'),
-      headers: _headers,
-    );
-
-    if (response.statusCode == 200) {
-      return json.decode(response.body);
-    }
-    return null;
-  }
-
-  Future<Map<String, dynamic>?> getTVImages(int id) async {
-    final response = await http.get(
-      Uri.parse('$_baseUrl/tv/$id/images'),
-      headers: _headers,
-    );
-
-    if (response.statusCode == 200) {
-      return json.decode(response.body);
-    }
-    return null;
-  }
-
-  Future<Map<String, dynamic>?> getMovieImages(int id) async {
-    final response = await http.get(
-      Uri.parse('$_baseUrl/movie/$id/images'),
-      headers: _headers,
-    );
-
-    if (response.statusCode == 200) {
-      return json.decode(response.body);
-    }
-    return null;
+  Future<Map<String, dynamic>?> getImages(String type, int id) async {
+    return _cachedGet('$_baseUrl/$type/$id/images', 'tmdb_${type}_images_$id');
   }
 }

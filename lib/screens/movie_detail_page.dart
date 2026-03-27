@@ -19,8 +19,8 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
   @override
   void initState() {
     super.initState();
-    _movieData = _tmdbService.getMovieDetails(widget.movieId);
-    _movieImages = _tmdbService.getMovieImages(widget.movieId);
+    _movieData = _tmdbService.getDetails('movie', widget.movieId);
+    _movieImages = _tmdbService.getImages('movie', widget.movieId);
   }
 
   @override

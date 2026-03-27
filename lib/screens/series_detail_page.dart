@@ -19,8 +19,8 @@ class _SeriesDetailPageState extends State<SeriesDetailPage> {
   @override
   void initState() {
     super.initState();
-    _seriesData = _tmdbService.getTVDetails(widget.seriesId);
-    _seriesImages = _tmdbService.getTVImages(widget.seriesId);
+    _seriesData = _tmdbService.getDetails('tv', widget.seriesId);
+    _seriesImages = _tmdbService.getImages('tv', widget.seriesId);
   }
 
   @override
