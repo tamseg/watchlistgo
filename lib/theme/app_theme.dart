@@ -8,6 +8,18 @@ class AppTheme {
   static const Color primaryColor = Colors.cyan;
   static const Color darkTextColor = Color(0xFF212121); // grey[900]
 
+  static const LinearGradient primaryGradient = LinearGradient(
+    begin: Alignment(-0.5, -3.0),
+    end: Alignment(0.5, 3.0),
+    colors: [
+      Color(0xFF5EFFF1),
+      Color(0xFF57BCEE),
+      Color(0xFF6C82FF),
+      Color(0xFFA26CFF),
+    ],
+    stops: [0.10, 0.40, 0.70, 0.9],
+  );
+
   // Backgrounds
   static const Color scaffoldColor = Colors.white;
   static const Color placeholderColor = Color(0xFFE0E0E0); // grey[300]

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../widgets/series_card.dart';
 import '../widgets/movie_card.dart';
-import '../widgets/custom_tab_bar.dart';
+import '../widgets/gradient_pill_switch.dart';
 
 class WatchlistPage extends StatefulWidget {
   final List<int> followedSeriesIds;
@@ -15,7 +15,7 @@ class WatchlistPage extends StatefulWidget {
     required this.followedMoviesIds,
     required this.onRemoveSeries,
     required this.onRemoveMovie,
-    super.key,
+    super.key
   });
   @override
   State<WatchlistPage> createState() => _WatchlistPageState();
@@ -24,11 +24,19 @@ class WatchlistPage extends StatefulWidget {
 class _WatchlistPageState extends State<WatchlistPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  int _currentTabIndex = 0;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(() {
+      if (mounted) {
+        setState(() {
+          _currentTabIndex = _tabController.index;
+        });
+      }
+    });
   }
 
   @override
@@ -47,20 +55,20 @@ class _WatchlistPageState extends State<WatchlistPage>
           Icon(
             icon,
             size: 64,
-            color: AppTheme.metaIconColor.withValues(alpha: 0.5),
+            color: AppTheme.metaIconColor.withValues(alpha: 0.5)
           ),
           const SizedBox(height: 16),
           Text(
             'Your ${type.toLowerCase()} watchlist is empty.',
-            style: const TextStyle(color: AppTheme.metaIconColor, fontSize: 16),
+            style: const TextStyle(color: AppTheme.metaIconColor, fontSize: 16)
           ),
           const SizedBox(height: 8),
           const Text(
             'Go to Search to find your favorites!',
-            style: TextStyle(color: AppTheme.metaIconColor, fontSize: 16),
-          ),
-        ],
-      ),
+            style: TextStyle(color: AppTheme.metaIconColor, fontSize: 16)
+          )
+        ]
+      )
     );
   }
 
@@ -80,32 +88,26 @@ class _WatchlistPageState extends State<WatchlistPage>
                 children: [
                   TextSpan(
                     text: 'Watchlist',
-                    style: AppTheme.watchlistPartStyle,
+                    style: AppTheme.watchlistPartStyle
                   ),
-                  TextSpan(text: ' Go', style: AppTheme.goPartStyle),
-                ],
-              ),
-            ),
-          ],
+                  TextSpan(text: ' Go', style: AppTheme.goPartStyle)
+                ]
+              )
+            )
+          ]
         ),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(AppTheme.appBarBottomHeight),
           child: Padding(
             padding: AppTheme.appBarBottomPadding,
-            child: Container(
-              height: AppTheme.tabContainerHeight,
-              width: AppTheme.tabContainerWidth,
-              decoration: AppTheme.tabTrackDecoration,
-              child: CustomTabBar(
-                controller: _tabController,
-                tabs: const [
-                  Tab(text: 'Series'),
-                  Tab(text: 'Movies'),
-                ],
-              ),
-            ),
-          ),
-        ),
+            child: GradientPillSwitch(
+              isMoviesSelected: _currentTabIndex == 1,
+              onChanged: (isMovies) {
+                _tabController.animateTo(isMovies ? 1 : 0);
+              }
+            )
+          )
+        )
       ),
       body: TabBarView(
         controller: _tabController,
@@ -117,7 +119,7 @@ class _WatchlistPageState extends State<WatchlistPage>
                     left: 14.0,
                     right: 14.0,
                     top: 24.0,
-                    bottom: 24.0,
+                    bottom: 24.0
                   ),
                   children: widget.followedSeriesIds.map((id) {
                     return Padding(
@@ -125,10 +127,10 @@ class _WatchlistPageState extends State<WatchlistPage>
                       padding: const EdgeInsets.only(bottom: 6.0),
                       child: SeriesCard(
                         seriesId: id,
-                        onRemove: () => widget.onRemoveSeries(id),
-                      ),
+                        onRemove: () => widget.onRemoveSeries(id)
+                      )
                     );
-                  }).toList(),
+                  }).toList()
                 ),
           widget.followedMoviesIds.isEmpty
               ? _buildEmptyState('Movies')
@@ -137,7 +139,7 @@ class _WatchlistPageState extends State<WatchlistPage>
                     left: 14.0,
                     right: 14.0,
                     top: 24.0,
-                    bottom: 24.0,
+                    bottom: 24.0
                   ),
                   children: widget.followedMoviesIds.map((id) {
                     return Padding(
@@ -145,13 +147,13 @@ class _WatchlistPageState extends State<WatchlistPage>
                       padding: const EdgeInsets.only(bottom: 6.0),
                       child: MovieCard(
                         movieId: id,
-                        onRemove: () => widget.onRemoveMovie(id),
-                      ),
+                        onRemove: () => widget.onRemoveMovie(id)
+                      )
                     );
-                  }).toList(),
-                ),
-        ],
-      ),
+                  }).toList()
+                )
+        ]
+      )
     );
   }
 }
