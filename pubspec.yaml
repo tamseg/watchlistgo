@@ -36,11 +36,10 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/logo.webp
     - assets/app_icon.webp
     - .env
 
-flutter_icons:
+flutter_launcher_icons:
   android: "ic_launcher"
   ios: true
   image_path: "assets/app_icon.webp"
