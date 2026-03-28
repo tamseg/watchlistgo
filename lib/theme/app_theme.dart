@@ -75,9 +75,9 @@ class AppTheme {
 
   // ─── Layout Constants ────────────────────────────────────────────
 
-  static const double appBarBottomHeight = 70.0;
+  static const double appBarBottomHeight = 80.0;
   static const EdgeInsets appBarBottomPadding = EdgeInsets.only(
-    top: 16.0,
+    top: 28.0,
     bottom: 12.0,
   );
   static const double tabContainerHeight = 40.0;

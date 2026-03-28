@@ -114,22 +114,16 @@ class SearchPageState extends State<SearchPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        centerTitle: true,
-        title: RichText(
-          text: const TextSpan(
-            style: AppTheme.appBarTitleStyle,
-            children: [
-              TextSpan(text: 'Search', style: AppTheme.watchlistPartStyle),
-            ],
-          ),
-        ),
+        toolbarHeight: 0,
       ),
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 18.0,
-              vertical: 8.0,
+            padding: const EdgeInsets.only(
+              left: 18.0,
+              right: 18.0,
+              top: 28.0,
+              bottom: 8.0,
             ),
             child: TextField(
               controller: _searchController,

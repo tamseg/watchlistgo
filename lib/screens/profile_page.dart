@@ -11,7 +11,7 @@ class ProfilePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Profile')),
+      appBar: AppBar(toolbarHeight: 0),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(

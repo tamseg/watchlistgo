@@ -76,26 +76,9 @@ class _WatchlistPageState extends State<WatchlistPage>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        centerTitle: true,
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Image.asset('assets/logo.webp', height: 40),
-            const SizedBox(width: 10),
-            RichText(
-              text: const TextSpan(
-                style: AppTheme.appBarTitleStyle,
-                children: [
-                  TextSpan(
-                    text: 'Watchlist',
-                    style: AppTheme.watchlistPartStyle
-                  ),
-                  TextSpan(text: ' Go', style: AppTheme.goPartStyle)
-                ]
-              )
-            )
-          ]
-        ),
+        toolbarHeight: 0,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(AppTheme.appBarBottomHeight),
           child: Padding(
