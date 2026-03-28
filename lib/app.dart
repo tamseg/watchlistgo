@@ -14,7 +14,7 @@ class WatchlistGo extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       navigatorKey: navigatorKey,
-      title: 'Watchlist Go',
+      title: 'WatchlistGo',
       theme: AppTheme.lightTheme,
       home: HomePage(repository: repository),
     );
