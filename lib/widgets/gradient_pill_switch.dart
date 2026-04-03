@@ -14,7 +14,7 @@ class GradientPillSwitch extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const double totalWidth = 280.0;
-    const double height = 40.0;
+    const double height = 36.0;
     const double itemWidth = totalWidth / 2;
 
     return GestureDetector(
@@ -38,7 +38,16 @@ class GradientPillSwitch extends StatelessWidget {
                 padding: const EdgeInsets.all(3.5),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(25.0),
-                  gradient: AppTheme.primaryGradient
+                  gradient: LinearGradient(
+                    begin: Alignment(-0.5, -3.0),
+                    end: Alignment(0.5, 3.0),
+                    colors: [
+                      Color(0xFF5edde0),
+                      Color(0xFF538feb),
+                      Color(0xFF7f73ea),
+                    ],
+                    stops: [0.30, 0.65, 0.80],
+                  ),
                 ),
                 child: Container(
                   decoration: BoxDecoration(
@@ -50,7 +59,7 @@ class GradientPillSwitch extends StatelessWidget {
                       )
                     ],
                     borderRadius: BorderRadius.circular(23.5),
-                    gradient: AppTheme.primaryGradient
+                    gradient: AppTheme.primaryGradient,
                   )
                 )
               )
@@ -74,7 +83,8 @@ class GradientPillSwitch extends StatelessWidget {
           text,
           style: TextStyle(
             color: isSelected ? Colors.white : const Color.fromARGB(176, 39, 38, 38),
-            fontWeight: FontWeight.bold
+            fontWeight: FontWeight.bold,
+            fontSize: 16
           )
         )
       )

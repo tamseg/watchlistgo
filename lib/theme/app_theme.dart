@@ -12,12 +12,12 @@ class AppTheme {
     begin: Alignment(-0.5, -3.0),
     end: Alignment(0.5, 3.0),
     colors: [
-      Color(0xFF5EFFF1),
-      Color(0xFF57BCEE),
-      Color(0xFF6C82FF),
-      Color(0xFFA26CFF),
+      Color(0xFF4acbde),
+      Color(0xFF429ae0),
+      Color(0xFF5488e6),
+      Color(0xFF7d6dec),
     ],
-    stops: [0.10, 0.40, 0.70, 0.9],
+    stops: [0.10, 0.40, 0.60, 0.9],
   );
 
   // Backgrounds
