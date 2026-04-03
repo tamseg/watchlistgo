@@ -50,7 +50,7 @@ class NotificationService {
       sound: true,
     );
 
-    const androidInit = AndroidInitializationSettings('@mipmap/ic_notification');
+    const androidInit = AndroidInitializationSettings('ic_notification');
     const initSettings = InitializationSettings(android: androidInit);
     await _localNotifications.initialize(
       settings: initSettings,
@@ -162,7 +162,7 @@ class NotificationService {
             channelDescription: _channelDescription,
             importance: Importance.max,
             priority: Priority.high,
-            icon: '@mipmap/ic_notification',
+            icon: 'ic_notification',
             largeIcon: largeIconPath != null ? FilePathAndroidBitmap(largeIconPath) : null,
             styleInformation: bigPictureStyle,
           ),
