@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../theme/app_theme.dart';
 import '../services/tmdb_service.dart';
 import '../screens/series_detail_page.dart';
 import 'media_card.dart';
@@ -36,22 +35,23 @@ class _SeriesCardState extends State<SeriesCard>
       future: _seriesData,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Card(
-            child: ListTile(
-              minTileHeight: AppTheme.cardHeight,
-              leading: const CircularProgressIndicator(),
-              title: const Text('Loading...'),
+          return const MediaCard(
+            title: 'Loading...',
+            subtitleWidget: Center(
+              child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
             ),
           );
         }
 
         if (snapshot.hasError || !snapshot.hasData || snapshot.data == null) {
-          return Card(
-            child: ListTile(
-              minTileHeight: AppTheme.cardHeight,
-              leading: const Icon(Icons.error),
-              title: const Text('Error loading series'),
-            ),
+          return MediaCard(
+            title: 'Error loading series',
+            subtitle: 'Tap to retry',
+            trailing: ActionMenu(onRemove: widget.onRemove),
           );
         }
 
@@ -62,25 +62,43 @@ class _SeriesCardState extends State<SeriesCard>
             ? 'https://image.tmdb.org/t/p/w200$posterPath'
             : null;
 
-        String episodeInfo = 'No upcoming episodes';
         final nextEpisode = data['next_episode_to_air'];
         final lastEpisode = data['last_episode_to_air'];
+
+        Widget subtitleWidget;
+        final theme = Theme.of(context).textTheme;
 
         if (nextEpisode != null) {
           final s = nextEpisode['season_number'];
           final e = nextEpisode['episode_number'];
           final date = nextEpisode['air_date'];
-          episodeInfo = 'Next: S${s}E$e - $date';
+          subtitleWidget = Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Next Episode:', style: theme.labelMedium),
+              Text('S${s}E$e · $date', style: theme.bodyMedium),
+            ],
+          );
         } else if (lastEpisode != null) {
           final s = lastEpisode['season_number'];
           final e = lastEpisode['episode_number'];
           final date = lastEpisode['air_date'];
-          episodeInfo = 'Last: S${s}E$e - $date';
+          subtitleWidget = Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Last Episode:', style: theme.labelMedium),
+              Text('S${s}E$e · $date', style: theme.bodyMedium),
+            ],
+          );
+        } else {
+          subtitleWidget = Text('No upcoming episodes', style: theme.bodyMedium);
         }
 
         return MediaCard(
           title: seriesTitle,
-          subtitle: episodeInfo,
+          subtitleWidget: subtitleWidget,
           posterUrl: posterUrl,
           trailing: ActionMenu(onRemove: widget.onRemove),
           onTap: () {

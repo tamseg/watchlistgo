@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../theme/app_theme.dart';
 import '../services/tmdb_service.dart';
 import '../screens/movie_detail_page.dart';
 import 'media_card.dart';
@@ -36,22 +35,23 @@ class _MovieCardState extends State<MovieCard>
       future: _movieData,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Card(
-            child: ListTile(
-              minTileHeight: AppTheme.cardHeight,
-              leading: const CircularProgressIndicator(),
-              title: const Text('Loading...'),
+          return const MediaCard(
+            title: 'Loading...',
+            subtitleWidget: Center(
+              child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
             ),
           );
         }
 
         if (snapshot.hasError || !snapshot.hasData || snapshot.data == null) {
-          return Card(
-            child: ListTile(
-              minTileHeight: AppTheme.cardHeight,
-              leading: const Icon(Icons.error),
-              title: const Text('Error loading movie'),
-            ),
+          return MediaCard(
+            title: 'Error loading movie',
+            subtitle: 'Tap to retry',
+            trailing: ActionMenu(onRemove: widget.onRemove),
           );
         }
 
@@ -63,10 +63,20 @@ class _MovieCardState extends State<MovieCard>
             : null;
 
         final releaseDate = data['release_date'] ?? 'N/A';
+        final theme = Theme.of(context).textTheme;
+
+        final subtitleWidget = Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Released:', style: theme.labelMedium),
+            Text(releaseDate, style: theme.bodyMedium),
+          ],
+        );
 
         return MediaCard(
           title: movieTitle,
-          subtitle: 'Released: $releaseDate',
+          subtitleWidget: subtitleWidget,
           posterUrl: posterUrl,
           trailing: ActionMenu(onRemove: widget.onRemove),
           onTap: () {

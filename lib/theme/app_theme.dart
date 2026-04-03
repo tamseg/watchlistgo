@@ -27,9 +27,10 @@ class AppTheme {
 
   // Detail Pages
   static const Color ratingStarColor = Colors.amber;
-  static const Color secondaryTextColor = Color(0xFF616161); // grey[700]
+  static const Color secondaryTextColor = Color(0xFF8E8E93); // grey[500]
   static const Color metaIconColor = Colors.grey;
   static const Color fallbackTitleColor = Colors.black;
+  static const Color shadowColor = Color(0x0D000000);
   static const Color detailAppBarIconColor = Colors.white;
 
   // Backdrop Gradient
@@ -63,12 +64,27 @@ class AppTheme {
       labelStyle: const TextStyle(fontWeight: FontWeight.bold),
       unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
     ),
-    textTheme: const TextTheme(
-      headlineLarge: TextStyle(
+    textTheme: TextTheme(
+      headlineLarge: const TextStyle(
         fontSize: 24,
         fontWeight: FontWeight.bold,
         letterSpacing: 0.5,
         color: darkTextColor,
+      ),
+      headlineMedium: const TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.bold,
+        color: darkTextColor,
+      ),
+      bodyMedium: const TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.w600,
+        color: Color(0xFF616161),
+      ),
+      labelMedium: TextStyle(
+        fontSize: 13,
+        fontWeight: FontWeight.w400,
+        color: secondaryTextColor.withValues(alpha: 0.7),
       ),
     ),
   );
@@ -85,7 +101,7 @@ class AppTheme {
   static const EdgeInsets tabIndicatorPadding = EdgeInsets.all(4.0);
   static const double detailLogoHeight = 60.0;
   static const double backdropHeight = 300.0;
-  static const double cardHeight = 72.0;
+  static const double cardHeight = 88.0;
 
   // ─── Custom Decorations ──────────────────────────────────────────
 
@@ -99,6 +115,19 @@ class AppTheme {
   static final BoxDecoration tabPillDecoration = BoxDecoration(
     borderRadius: BorderRadius.circular(tabBorderRadius),
     color: primaryColor,
+  );
+
+  static final BoxShadow cardShadow = BoxShadow(
+    color: Colors.black.withValues(alpha: 0.12),
+    blurRadius: 8,
+    spreadRadius: 1,
+    offset: const Offset(0, 2),
+  );
+
+  static final BoxDecoration cardDecoration = BoxDecoration(
+    color: Colors.white,
+    borderRadius: BorderRadius.circular(12.0),
+    boxShadow: [cardShadow],
   );
 
   // ─── Text Styles ─────────────────────────────────────────────────

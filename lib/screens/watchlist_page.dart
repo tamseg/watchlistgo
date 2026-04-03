@@ -102,16 +102,13 @@ class _WatchlistPageState extends State<WatchlistPage>
                     left: 14.0,
                     right: 14.0,
                     top: 24.0,
-                    bottom: 24.0
+                    bottom: 4.0
                   ),
                   children: widget.followedSeriesIds.map((id) {
-                    return Padding(
+                    return SeriesCard(
                       key: ValueKey('series_$id'),
-                      padding: const EdgeInsets.only(bottom: 6.0),
-                      child: SeriesCard(
-                        seriesId: id,
-                        onRemove: () => widget.onRemoveSeries(id)
-                      )
+                      seriesId: id,
+                      onRemove: () => widget.onRemoveSeries(id)
                     );
                   }).toList()
                 ),
@@ -122,16 +119,13 @@ class _WatchlistPageState extends State<WatchlistPage>
                     left: 14.0,
                     right: 14.0,
                     top: 24.0,
-                    bottom: 24.0
+                    bottom: 4.0
                   ),
                   children: widget.followedMoviesIds.map((id) {
-                    return Padding(
+                    return MovieCard(
                       key: ValueKey('movie_$id'),
-                      padding: const EdgeInsets.only(bottom: 6.0),
-                      child: MovieCard(
-                        movieId: id,
-                        onRemove: () => widget.onRemoveMovie(id)
-                      )
+                      movieId: id,
+                      onRemove: () => widget.onRemoveMovie(id)
                     );
                   }).toList()
                 )

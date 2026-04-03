@@ -23,34 +23,74 @@ class MediaCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: ListTile(
-        minTileHeight: AppTheme.cardHeight,
-        leading: posterUrl != null
-            ? SizedBox(
-                width: 44,
-                height: 66,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(6.0),
-                  child: CachedNetworkImage(
-                    imageUrl: posterUrl!,
-                    fit: BoxFit.cover,
-                    fadeInDuration: Duration.zero,
-                    fadeOutDuration: Duration.zero,
-                    placeholder: (context, url) =>
-                        Container(color: AppTheme.placeholderColor),
-                    errorWidget: (context, url, error) =>
-                        const Icon(Icons.movie),
+    return Container(
+      constraints: const BoxConstraints(minHeight: AppTheme.cardHeight, maxHeight: AppTheme.cardHeight),
+      decoration: AppTheme.cardDecoration,
+      margin: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+      child: Card(
+        elevation: 0,
+        color: Colors.transparent,
+        margin: EdgeInsets.zero,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12.0),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            child: Row(
+              children: [
+                if (posterUrl != null) ...[
+                  SizedBox(
+                    width: 52,
+                    height: 78,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8.0),
+                      child: CachedNetworkImage(
+                        imageUrl: posterUrl!,
+                        fit: BoxFit.cover,
+                        fadeInDuration: Duration.zero,
+                        fadeOutDuration: Duration.zero,
+                        placeholder: (context, url) => Container(color: AppTheme.placeholderColor),
+                        errorWidget: (context, url, error) => const Icon(Icons.movie),
+                      ),
+                    ),
+                  ),
+                ] else ...[
+                  const SizedBox(
+                    width: 56,
+                    height: 84,
+                    child: Icon(Icons.movie),
+                  ),
+                ],
+                const SizedBox(width: 16.0),
+
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ScrollingText(
+                        text: title,
+                        style: Theme.of(context).textTheme.headlineMedium,
+                      ),
+                      const SizedBox(height: 4.0),
+                      if (subtitleWidget != null)
+                        subtitleWidget!
+                      else if (subtitle != null)
+                        ScrollingText(
+                          text: subtitle!,
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                    ],
                   ),
                 ),
-              )
-            : const Icon(Icons.movie),
-        title: ScrollingText(text: title),
-        subtitle:
-            subtitleWidget ??
-            (subtitle != null ? ScrollingText(text: subtitle!) : null),
-        trailing: trailing,
-        onTap: onTap,
+                if (trailing != null) ...[
+                  const SizedBox(width: 8.0),
+                  trailing!,
+                ]
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

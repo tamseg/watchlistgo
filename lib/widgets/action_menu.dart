@@ -8,6 +8,7 @@ class ActionMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PopupMenuButton<String>(
+      iconColor: Colors.grey[600],
       color: Colors.grey[100],
       elevation: 4.0,
       offset: const Offset(-40, 10),
