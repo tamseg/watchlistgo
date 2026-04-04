@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 
 class GradientPillSwitch extends StatelessWidget {
-  final bool isMoviesSelected;
+  final double animationValue;
   final ValueChanged<bool> onChanged;
 
   const GradientPillSwitch({
     super.key,
-    required this.isMoviesSelected,
+    required this.animationValue,
     required this.onChanged
   });
 
@@ -17,8 +17,10 @@ class GradientPillSwitch extends StatelessWidget {
     const double height = 36.0;
     const double itemWidth = totalWidth / 2;
 
+    final alignment = Alignment(lerpDouble(-1.0, 1.0, animationValue)!, 0.0);
+
     return GestureDetector(
-      onTap: () => onChanged(!isMoviesSelected),
+      onTap: () => onChanged(animationValue < 0.5),
       child: Container(
         width: totalWidth,
         height: height,
@@ -28,10 +30,8 @@ class GradientPillSwitch extends StatelessWidget {
         ),
         child: Stack(
           children: [
-            AnimatedAlign(
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
-              alignment: isMoviesSelected ? Alignment.centerRight : Alignment.centerLeft,
+            Align(
+              alignment: alignment,
               child: Container(
                 width: itemWidth,
                 height: height,
@@ -66,8 +66,8 @@ class GradientPillSwitch extends StatelessWidget {
             ),
             Row(
               children: [
-                _buildLabel('My Series', !isMoviesSelected),
-                _buildLabel('My Movies', isMoviesSelected),
+                _buildLabel('My Series', animationValue < 0.5),
+                _buildLabel('My Movies', animationValue >= 0.5),
               ]
             )
           ]
@@ -90,4 +90,8 @@ class GradientPillSwitch extends StatelessWidget {
       )
     );
   }
+}
+
+double? lerpDouble(double a, double b, double t) {
+  return a + (b - a) * t;
 }

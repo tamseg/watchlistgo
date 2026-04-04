@@ -25,19 +25,11 @@ class WatchlistPage extends StatefulWidget {
 class _WatchlistPageState extends State<WatchlistPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  int _currentTabIndex = 0;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    _tabController.addListener(() {
-      if (mounted) {
-        setState(() {
-          _currentTabIndex = _tabController.index;
-        });
-      }
-    });
   }
 
   @override
@@ -86,10 +78,15 @@ class _WatchlistPageState extends State<WatchlistPage>
           preferredSize: const Size.fromHeight(AppTheme.appBarBottomHeight),
           child: Padding(
             padding: AppTheme.appBarBottomPadding,
-            child: GradientPillSwitch(
-              isMoviesSelected: _currentTabIndex == 1,
-              onChanged: (isMovies) {
-                _tabController.animateTo(isMovies ? 1 : 0);
+            child: AnimatedBuilder(
+              animation: _tabController.animation!,
+              builder: (context, child) {
+                return GradientPillSwitch(
+                  animationValue: _tabController.animation!.value,
+                  onChanged: (isMovies) {
+                    _tabController.animateTo(isMovies ? 1 : 0);
+                  }
+                );
               }
             )
           )
