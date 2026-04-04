@@ -24,7 +24,10 @@ class MediaCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      constraints: const BoxConstraints(minHeight: AppTheme.cardHeight, maxHeight: AppTheme.cardHeight),
+      constraints: const BoxConstraints(
+        minHeight: AppTheme.cardHeight,
+        maxHeight: AppTheme.cardHeight,
+      ),
       decoration: AppTheme.cardDecoration,
       margin: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
       child: Card(
@@ -35,32 +38,31 @@ class MediaCard extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(12.0),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 8.0,
+            ),
             child: Row(
               children: [
-                if (posterUrl != null) ...[
-                  SizedBox(
-                    width: 52,
-                    height: 78,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8.0),
-                      child: CachedNetworkImage(
-                        imageUrl: posterUrl!,
-                        fit: BoxFit.cover,
-                        fadeInDuration: Duration.zero,
-                        fadeOutDuration: Duration.zero,
-                        placeholder: (context, url) => Container(color: AppTheme.placeholderColor),
-                        errorWidget: (context, url, error) => const Icon(Icons.movie),
-                      ),
-                    ),
+                SizedBox(
+                  width: 52,
+                  height: 78,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8.0),
+                    child: posterUrl != null
+                        ? CachedNetworkImage(
+                            imageUrl: posterUrl!,
+                            fit: BoxFit.cover,
+                            fadeInDuration: Duration.zero,
+                            fadeOutDuration: Duration.zero,
+                            placeholder: (context, url) =>
+                                Container(color: AppTheme.placeholderColor),
+                            errorWidget: (context, url, error) =>
+                                const Icon(Icons.movie),
+                          )
+                        : const Icon(Icons.movie),
                   ),
-                ] else ...[
-                  const SizedBox(
-                    width: 56,
-                    height: 84,
-                    child: Icon(Icons.movie),
-                  ),
-                ],
+                ),
                 const SizedBox(width: 16.0),
 
                 Expanded(
@@ -86,7 +88,7 @@ class MediaCard extends StatelessWidget {
                 if (trailing != null) ...[
                   const SizedBox(width: 8.0),
                   trailing!,
-                ]
+                ],
               ],
             ),
           ),
