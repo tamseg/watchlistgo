@@ -62,8 +62,8 @@ class AppTheme {
   static final ThemeData lightTheme = ThemeData(
     useMaterial3: true,
     colorScheme: ColorScheme.fromSeed(
-      seedColor: primaryColor,
-      primary: primaryColor,
+      seedColor: const Color(0xFF5edde0), // Using exact electric cyan for the seed
+      primary: const Color(0xFF5edde0),   // Using exact electric cyan for primary
     ),
     scaffoldBackgroundColor: scaffoldColor,
     appBarTheme: const AppBarTheme(

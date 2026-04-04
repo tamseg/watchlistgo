@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../services/tmdb_service.dart';
@@ -27,6 +26,14 @@ class SearchPage extends StatefulWidget {
 class SearchPageState extends State<SearchPage> {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    _searchFocusNode.addListener(() {
+      if (mounted) setState(() {});
+    });
+  }
 
   void requestSearchFocus() {
     _searchFocusNode.requestFocus();
@@ -128,38 +135,67 @@ class SearchPageState extends State<SearchPage> {
               right: 18.0,
               bottom: 12.0,
             ),
-            child: TextField(
-              controller: _searchController,
-              focusNode: _searchFocusNode,
-              onChanged: _onSearchChanged,
-              decoration: InputDecoration(
-                hintText: 'Search movies & series...',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          _searchController.clear();
-                          _onSearchChanged('');
-                        },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12.0),
+                border: !_searchFocusNode.hasFocus
+                    ? Border.all(color: Colors.grey.withValues(alpha: 0.3), width: 1.0)
+                    : null,
+                gradient: _searchFocusNode.hasFocus
+                    ? const LinearGradient(
+                        begin: Alignment(-0.2, -1.5),
+                        end: Alignment(0.2, 1.5),
+                        colors: [
+                          Color(0xFF5edde0),
+                          Color(0xFF538feb),
+                          Color(0xFF7f73ea),
+                        ],
+                        stops: [0.4, 0.8, 1.0],
+                        transform: GradientRotation(0.4),
                       )
                     : null,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.0),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12.0),
-                  borderSide: const BorderSide(
-                    color: AppTheme.primaryColor,
-                    width: 2.0,
+                boxShadow: [
+                  if (_searchFocusNode.hasFocus)
+                    BoxShadow(
+                      color: const Color(0xFF538feb).withValues(alpha: 0.25),
+                      blurRadius: 10,
+                      spreadRadius: 2,
+                    ),
+                ],
+              ),
+              padding: EdgeInsets.all(_searchFocusNode.hasFocus ? 1.5 : 0),
+              child: TextField(
+                controller: _searchController,
+                focusNode: _searchFocusNode,
+                onChanged: _onSearchChanged,
+                decoration: InputDecoration(
+                  hintText: 'Search movies & series...',
+                  prefixIcon: const Icon(Icons.search),
+                  suffixIcon: _searchController.text.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: () {
+                            _searchController.clear();
+                            _onSearchChanged('');
+                          },
+                        )
+                      : null,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                    borderSide: BorderSide.none,
                   ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16.0,
+                    vertical: 12.0,
+                  ),
+                  filled: true,
+                  fillColor: Colors.white,
                 ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16.0,
-                  vertical: 12.0,
-                ),
-                filled: true,
-                fillColor: Colors.white.withValues(alpha: 0.8),
               ),
             ),
           ),
