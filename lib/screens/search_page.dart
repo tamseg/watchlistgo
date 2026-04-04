@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../services/tmdb_service.dart';
@@ -113,17 +114,19 @@ class SearchPageState extends State<SearchPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         toolbarHeight: 0,
-      ),
-      body: Column(
-        children: [
-          Padding(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        flexibleSpace: AppTheme.buildFrostedGlassBackground(),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(84),
+          child: Padding(
             padding: const EdgeInsets.only(
               left: 18.0,
               right: 18.0,
-              top: 28.0,
-              bottom: 8.0,
+              bottom: 12.0,
             ),
             child: TextField(
               controller: _searchController,
@@ -155,13 +158,14 @@ class SearchPageState extends State<SearchPage> {
                   horizontal: 16.0,
                   vertical: 12.0,
                 ),
+                filled: true,
+                fillColor: Colors.white.withValues(alpha: 0.8),
               ),
             ),
           ),
-
-          Expanded(child: _buildBody()),
-        ],
+        ),
       ),
+      body: _buildBody(),
     );
   }
 
@@ -207,8 +211,8 @@ class SearchPageState extends State<SearchPage> {
       padding: const EdgeInsets.only(
         left: 14.0,
         right: 14.0,
-        top: 8.0,
-        bottom: 24.0,
+        top: 130.0,
+        bottom: 64.0,
       ),
       itemCount: _results.length,
       itemBuilder: (context, index) {

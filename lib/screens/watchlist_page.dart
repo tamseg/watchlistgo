@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../widgets/series_card.dart';
@@ -75,10 +76,12 @@ class _WatchlistPageState extends State<WatchlistPage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         toolbarHeight: 0,
         backgroundColor: Colors.transparent,
         elevation: 0,
+        flexibleSpace: AppTheme.buildFrostedGlassBackground(),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(AppTheme.appBarBottomHeight),
           child: Padding(
@@ -101,8 +104,8 @@ class _WatchlistPageState extends State<WatchlistPage>
                   padding: const EdgeInsets.only(
                     left: 14.0,
                     right: 14.0,
-                    top: 24.0,
-                    bottom: 4.0
+                    top: 130.0,
+                    bottom: 64.0
                   ),
                   children: widget.followedSeriesIds.map((id) {
                     return SeriesCard(
@@ -118,8 +121,8 @@ class _WatchlistPageState extends State<WatchlistPage>
                   padding: const EdgeInsets.only(
                     left: 14.0,
                     right: 14.0,
-                    top: 24.0,
-                    bottom: 4.0
+                    top: 130.0,
+                    bottom: 64.0
                   ),
                   children: widget.followedMoviesIds.map((id) {
                     return MovieCard(

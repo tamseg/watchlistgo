@@ -1,11 +1,28 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 
 class AppTheme {
+  // ─── Glass Aesthetics ────────────────────────────────────────────
+  // Centralized frosted glass parameters
+  static const double glassBlurSigma = 15.0;
+  static const double glassOpacity = 0.5;
+
+  static Widget buildFrostedGlassBackground() {
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: glassBlurSigma, sigmaY: glassBlurSigma),
+        child: Container(
+          color: Colors.white.withValues(alpha: glassOpacity),
+        ),
+      ),
+    );
+  }
   // ─── Semantic Colors ─────────────────────────────────────────────
   // Change these in one place to update the entire app.
 
   // Brand
   static const Color primaryColor = Colors.cyan;
+  static const Color navActiveColor = Color(0xFF1E88E5);
   static const Color darkTextColor = Color(0xFF212121); // grey[900]
 
   static const LinearGradient primaryGradient = LinearGradient(
