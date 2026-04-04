@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:custom_pop_up_menu/custom_pop_up_menu.dart';
 
 class ActionMenu extends StatefulWidget {
   final VoidCallback onRemove;
@@ -10,71 +9,145 @@ class ActionMenu extends StatefulWidget {
   State<ActionMenu> createState() => _ActionMenuState();
 }
 
-class _ActionMenuState extends State<ActionMenu> {
-  final CustomPopupMenuController _controller = CustomPopupMenuController();
+class _ActionMenuState extends State<ActionMenu> with SingleTickerProviderStateMixin {
+  final LayerLink _layerLink = LayerLink();
+  OverlayEntry? _overlayEntry;
+  late AnimationController _animationController;
+  late Animation<double> _expandAnimation;
+  bool _isOpen = false;
 
-  Widget _buildMenu() {
-    return Material(
-      color: Colors.transparent,
-      child: Container(
-        width: 140,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12.0),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.12),
-              blurRadius: 12,
-              spreadRadius: 1,
-              offset: const Offset(0, 0),
-            ),
-          ],
-        ),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12.0),
-          onTap: () {
-            _controller.hideMenu();
-            widget.onRemove();
-          },
-          child: const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
-            child: Row(
-              children: [
-                Icon(Icons.delete_outline, color: Colors.red, size: 20),
-                SizedBox(width: 12),
-                Text(
-                  'Remove',
-                  style: TextStyle(
-                    color: Colors.red,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
-              ],
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 200),
+    );
+    _expandAnimation = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  @override
+  void dispose() {
+    _removeOverlay();
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  void _toggleMenu() {
+    if (_isOpen) {
+      _closeMenu();
+    } else {
+      _openMenu();
+    }
+  }
+
+  void _openMenu() {
+    _overlayEntry = _createOverlayEntry();
+    Overlay.of(context).insert(_overlayEntry!);
+    _animationController.forward();
+    setState(() => _isOpen = true);
+  }
+
+  Future<void> _closeMenu() async {
+    await _animationController.reverse();
+    _removeOverlay();
+    if (mounted) setState(() => _isOpen = false);
+  }
+
+  void _removeOverlay() {
+    _overlayEntry?.remove();
+    _overlayEntry = null;
+  }
+
+  OverlayEntry _createOverlayEntry() {
+    return OverlayEntry(
+      builder: (context) => Stack(
+        children: [
+          Positioned.fill(
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: _closeMenu,
+              child: Container(color: Colors.transparent),
             ),
           ),
-        ),
+          Positioned(
+            width: 140,
+            child: CompositedTransformFollower(
+              link: _layerLink,
+              showWhenUnlinked: false,
+              targetAnchor: Alignment.centerLeft,
+              followerAnchor: Alignment.centerRight,
+              offset: const Offset(4, 14),
+              child: ScaleTransition(
+                scale: _expandAnimation,
+                alignment: Alignment.topRight,
+                child: FadeTransition(
+                  opacity: _expandAnimation,
+                  child: Material(
+                    color: Colors.transparent,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12.0),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.15),
+                            blurRadius: 15,
+                            spreadRadius: 2,
+                            offset: const Offset(0, 5),
+                          ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12.0),
+                        child: InkWell(
+                          onTap: () {
+                            _closeMenu().then((_) => widget.onRemove());
+                          },
+                          child: const Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+                            child: Row(
+                              children: [
+                                Icon(Icons.delete_outline, color: Colors.red, size: 20),
+                                SizedBox(width: 12),
+                                Text(
+                                  'Remove',
+                                  style: TextStyle(
+                                    color: Colors.red,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return CustomPopupMenu(
-      controller: _controller,
-      menuBuilder: _buildMenu,
-      pressType: PressType.singleClick,
-      barrierColor: Colors.transparent,
-      position: PreferredPosition.bottom,
-      horizontalMargin: 84.0,
-      verticalMargin: -34.0,
-      showArrow: false,
-      child: AbsorbPointer(
-        child: IconButton(
-          padding: EdgeInsets.zero,
-          icon: Icon(Icons.more_vert, color: Colors.grey[600]),
-          onPressed: () {},
+    return CompositedTransformTarget(
+      link: _layerLink,
+      child: IconButton(
+        padding: EdgeInsets.zero,
+        icon: Icon(
+          Icons.more_vert,
+          color: _isOpen ? Colors.black : Colors.grey[600],
         ),
+        onPressed: _toggleMenu,
       ),
     );
   }
