@@ -10,10 +10,11 @@ class AppTheme {
   static Widget buildFrostedGlassBackground() {
     return ClipRect(
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: glassBlurSigma, sigmaY: glassBlurSigma),
-        child: Container(
-          color: Colors.white.withValues(alpha: glassOpacity),
+        filter: ImageFilter.blur(
+          sigmaX: glassBlurSigma,
+          sigmaY: glassBlurSigma,
         ),
+        child: Container(color: Colors.white.withValues(alpha: glassOpacity)),
       ),
     );
   }
@@ -62,8 +63,10 @@ class AppTheme {
   static final ThemeData lightTheme = ThemeData(
     useMaterial3: true,
     colorScheme: ColorScheme.fromSeed(
-      seedColor: const Color(0xFF5edde0), // Using exact electric cyan for the seed
-      primary: const Color(0xFF5edde0),   // Using exact electric cyan for primary
+      seedColor: const Color(
+        0xFF5edde0,
+      ), // Using exact electric cyan for the seed
+      primary: const Color(0xFF5edde0), // Using exact electric cyan for primary
     ),
     scaffoldBackgroundColor: scaffoldColor,
     appBarTheme: const AppBarTheme(
@@ -117,7 +120,8 @@ class AppTheme {
   static const double tabContainerWidth = 250.0;
   static const EdgeInsets tabIndicatorPadding = EdgeInsets.all(4.0);
   static const double detailLogoHeight = 60.0;
-  static const double detailLogoMaxWidthFactor = 0.55; // fraction of screen width
+  static const double detailLogoMaxWidthFactor =
+      0.55; // fraction of screen width
   static const double backdropHeight = 300.0;
   static const double cardHeight = 88.0;
 

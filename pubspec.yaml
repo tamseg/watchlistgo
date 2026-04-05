@@ -40,6 +40,7 @@ flutter:
 
   assets:
     - assets/app_icon.webp
+    - assets/arrow_left.svg
     - .env
 
 flutter_launcher_icons:

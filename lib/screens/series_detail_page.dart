@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../theme/app_theme.dart';
 import '../services/tmdb_service.dart';
 import '../widgets/logo_widget.dart';
@@ -24,16 +25,20 @@ class _SeriesDetailPageState extends State<SeriesDetailPage> {
     _seriesImages = _tmdbService.getImages('tv', widget.seriesId);
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        automaticallyImplyLeading:
-            Theme.of(context).platform != TargetPlatform.android,
-        iconTheme: const IconThemeData(color: AppTheme.detailAppBarIconColor),
+        leading: IconButton(
+          onPressed: () => Navigator.maybePop(context),
+          icon: SvgPicture.asset(
+            'assets/arrow_left.svg',
+            width: 24,
+            height: 24,
+          ),
+        ),
       ),
       extendBodyBehindAppBar: true,
       body: FutureBuilder<List<Map<String, dynamic>?>>(
