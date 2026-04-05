@@ -165,14 +165,6 @@ class _SeriesDetailPageState extends State<SeriesDetailPage> {
                   fit: BoxFit.cover,
                 ),
               ),
-              foregroundDecoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: AppTheme.backdropGradientColors,
-                  stops: AppTheme.backdropGradientStops,
-                ),
-              ),
             )
           else
             Container(
