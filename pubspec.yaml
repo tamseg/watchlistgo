@@ -1,7 +1,7 @@
 name: watchlistgo
 description: "A new Flutter project."
 publish_to: "none"
-version: 1.0.0+3
+version: 1.0.0+4
 
 environment:
   sdk: ^3.9.2
@@ -26,6 +26,8 @@ dependencies:
   flutter_dotenv: ^6.0.0
   flutter_cache_manager: ^3.4.1
   custom_pop_up_menu: ^1.2.4
+  flutter_svg: ^2.2.4
+  palette_generator: ^0.3.3+7
 
 dev_dependencies:
   flutter_test:

@@ -117,6 +117,7 @@ class AppTheme {
   static const double tabContainerWidth = 250.0;
   static const EdgeInsets tabIndicatorPadding = EdgeInsets.all(4.0);
   static const double detailLogoHeight = 60.0;
+  static const double detailLogoMaxWidthFactor = 0.55; // fraction of screen width
   static const double backdropHeight = 300.0;
   static const double cardHeight = 88.0;
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../theme/app_theme.dart';
 import '../services/tmdb_service.dart';
+import '../widgets/logo_widget.dart';
 
 class MovieDetailPage extends StatefulWidget {
   final int movieId;
@@ -56,18 +57,7 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
               ? 'https://image.tmdb.org/t/p/original$backdropPath'
               : null;
 
-          String? logoUrl;
-          if (imagesData != null && imagesData['logos'] != null) {
-            final logos = imagesData['logos'] as List;
-            final englishLogo = logos.firstWhere(
-              (l) => l['iso_639_1'] == 'en',
-              orElse: () => null,
-            );
-            if (englishLogo != null) {
-              logoUrl =
-                  'https://image.tmdb.org/t/p/w500${englishLogo['file_path']}';
-            }
-          }
+          final logoPick = LogoWidget.pickLogo(imagesData);
 
           final rating = data['vote_average']?.toStringAsFixed(1) ?? 'N/A';
           final releaseDate = data['release_date'] ?? 'N/A';
@@ -80,7 +70,7 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildBackdropHeader(backdropUrl, logoUrl, title),
+                _buildBackdropHeader(backdropUrl, logoPick, title),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
                   child: Column(
@@ -160,9 +150,12 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
 
   Widget _buildBackdropHeader(
     String? backdropUrl,
-    String? logoUrl,
+    (String url, bool isSvg)? logoPick,
     String title,
   ) {
+    final maxLogoWidth =
+        MediaQuery.of(context).size.width * AppTheme.detailLogoMaxWidthFactor;
+
     return SizedBox(
       height: AppTheme.backdropHeight,
       width: double.infinity,
@@ -188,24 +181,36 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
           Positioned(
             left: 16,
             bottom: 16,
-            child: logoUrl != null
-                ? CachedNetworkImage(
-                    imageUrl: logoUrl,
-                    height: AppTheme.detailLogoHeight,
-                    fit: BoxFit.contain,
-                    placeholder: (context, url) =>
-                        SizedBox(height: AppTheme.detailLogoHeight, width: 150),
-                  )
-                : Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.fallbackTitleColor,
+            child: SizedBox(
+              width: maxLogoWidth,
+              height: AppTheme.detailLogoHeight,
+              child: logoPick != null
+                  ? LogoWidget(
+                      logoUrl: logoPick.$1,
+                      isSvg: logoPick.$2,
+                      backdropUrl: backdropUrl,
+                      fallbackTitle: title,
+                      maxWidth: maxLogoWidth,
+                      maxHeight: AppTheme.detailLogoHeight,
+                    )
+                  : Align(
+                      alignment: Alignment.bottomLeft,
+                      child: _buildTitleText(title),
                     ),
-                  ),
+            ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildTitleText(String title) {
+    return Text(
+      title,
+      style: const TextStyle(
+        fontSize: 28,
+        fontWeight: FontWeight.bold,
+        color: AppTheme.fallbackTitleColor,
       ),
     );
   }

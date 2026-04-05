@@ -72,6 +72,9 @@ class TMDBService {
   }
 
   Future<Map<String, dynamic>?> getImages(String type, int id) async {
-    return _cachedGet('$_baseUrl/$type/$id/images', 'tmdb_${type}_images_$id');
+    return _cachedGet(
+      '$_baseUrl/$type/$id/images?include_image_language=en,null',
+      'tmdb_${type}_images_$id',
+    );
   }
 }
