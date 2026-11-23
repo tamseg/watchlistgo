@@ -1,57 +1,41 @@
 import 'package:material_ui/material_ui.dart';
 import '../theme/app_theme.dart';
-import '../widgets/series_card.dart';
-import '../widgets/movie_card.dart';
-import '../widgets/gradient_pill_switch.dart';
 
-class WatchlistPage extends StatefulWidget {
-  final List<int> followedSeriesIds;
-  final List<int> followedMoviesIds;
-  final void Function(int id) onRemoveSeries;
-  final void Function(int id) onRemoveMovie;
+const double _expandedHeaderHeight = 92.0;
+const double _collapsedBarHeight = 44.0;
+const double _expandedTitleSize = 34.0;
+const double _collapsedTitleSize = 18.0;
+const double _titleBottomPadding = 11.0;
+
+class WatchlistPage extends StatelessWidget {
+  final String title;
+  final List<int> ids;
+  final IconData emptyIcon;
+  final String emptyLabel;
+  final Widget Function(int id) itemBuilder;
 
   const WatchlistPage({
-    required this.followedSeriesIds,
-    required this.followedMoviesIds,
-    required this.onRemoveSeries,
-    required this.onRemoveMovie,
+    required this.title,
+    required this.ids,
+    required this.emptyIcon,
+    required this.emptyLabel,
+    required this.itemBuilder,
     super.key,
   });
-  @override
-  State<WatchlistPage> createState() => _WatchlistPageState();
-}
 
-class _WatchlistPageState extends State<WatchlistPage>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 2, vsync: this);
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
-
-  Widget _buildEmptyState(String type) {
-    final IconData icon = type == 'Series' ? Icons.tv : Icons.movie;
-
+  Widget _buildEmptyState() {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            icon,
+            emptyIcon,
             size: 64,
             color: AppTheme.metaIconColor.withValues(alpha: 0.5),
           ),
           const SizedBox(height: 16),
           Text(
-            'Your ${type.toLowerCase()} watchlist is empty.',
+            'Your $emptyLabel watchlist is empty.',
             style: const TextStyle(color: AppTheme.metaIconColor, fontSize: 16),
           ),
           const SizedBox(height: 8),
@@ -66,68 +50,51 @@ class _WatchlistPageState extends State<WatchlistPage>
 
   @override
   Widget build(BuildContext context) {
+    final pageColor = Theme.of(context).scaffoldBackgroundColor;
+
     return Scaffold(
-      extendBodyBehindAppBar: true,
       appBar: AppBar(
         toolbarHeight: 0,
-        backgroundColor: Colors.transparent,
+        backgroundColor: pageColor,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
-        flexibleSpace: AppTheme.buildFrostedGlassBackground(),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(AppTheme.appBarBottomHeight),
-          child: Padding(
-            padding: AppTheme.appBarBottomPadding,
-            child: AnimatedBuilder(
-              animation: _tabController.animation!,
-              builder: (context, child) {
-                return GradientPillSwitch(
-                  animationValue: _tabController.animation!.value,
-                  onChanged: (isMovies) {
-                    _tabController.animateTo(isMovies ? 1 : 0);
-                  },
-                );
-              },
+        scrolledUnderElevation: 0,
+      ),
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            primary: false,
+            pinned: true,
+            expandedHeight: _expandedHeaderHeight,
+            toolbarHeight: _collapsedBarHeight,
+            automaticallyImplyLeading: false,
+            backgroundColor: pageColor,
+            surfaceTintColor: Colors.transparent,
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            flexibleSpace: FlexibleSpaceBar(
+              centerTitle: false,
+              titlePadding: const EdgeInsetsDirectional.only(
+                start: 26.0,
+                bottom: _titleBottomPadding,
+              ),
+              expandedTitleScale: _expandedTitleSize / _collapsedTitleSize,
+              title: Text(
+                title,
+                style: const TextStyle(
+                  fontSize: _collapsedTitleSize,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
             ),
           ),
-        ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          widget.followedSeriesIds.isEmpty
-              ? _buildEmptyState('Series')
-              : ListView(
-                  padding: const EdgeInsets.only(
-                    left: 14.0,
-                    right: 14.0,
-                    top: 130.0,
-                    bottom: 64.0,
-                  ),
-                  children: widget.followedSeriesIds.map((id) {
-                    return SeriesCard(
-                      key: ValueKey('series_$id'),
-                      seriesId: id,
-                      onRemove: () => widget.onRemoveSeries(id),
-                    );
-                  }).toList(),
-                ),
-          widget.followedMoviesIds.isEmpty
-              ? _buildEmptyState('Movies')
-              : ListView(
-                  padding: const EdgeInsets.only(
-                    left: 14.0,
-                    right: 14.0,
-                    top: 130.0,
-                    bottom: 64.0,
-                  ),
-                  children: widget.followedMoviesIds.map((id) {
-                    return MovieCard(
-                      key: ValueKey('movie_$id'),
-                      movieId: id,
-                      onRemove: () => widget.onRemoveMovie(id),
-                    );
-                  }).toList(),
-                ),
+          if (ids.isEmpty)
+            SliverFillRemaining(hasScrollBody: false, child: _buildEmptyState())
+          else
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(14.0, 8.0, 14.0, 64.0),
+              sliver: SliverList.list(children: ids.map(itemBuilder).toList()),
+            ),
         ],
       ),
     );
