@@ -248,11 +248,11 @@ class SearchPageState extends State<SearchPage> {
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.only(
+      padding: EdgeInsets.only(
         left: 14.0,
         right: 14.0,
         top: 130.0,
-        bottom: 64.0,
+        bottom: MediaQuery.paddingOf(context).bottom + 16.0,
       ),
       itemCount: _results.length,
       itemBuilder: (context, index) {

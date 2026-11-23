@@ -92,7 +92,12 @@ class WatchlistPage extends StatelessWidget {
             SliverFillRemaining(hasScrollBody: false, child: _buildEmptyState())
           else
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(14.0, 8.0, 14.0, 64.0),
+              padding: EdgeInsets.fromLTRB(
+                14.0,
+                8.0,
+                14.0,
+                MediaQuery.paddingOf(context).bottom + 16.0,
+              ),
               sliver: SliverList.list(children: ids.map(itemBuilder).toList()),
             ),
         ],

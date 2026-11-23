@@ -63,11 +63,11 @@ class _ProfilePageState extends State<ProfilePage> {
         scrolledUnderElevation: 0,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.only(
+        padding: EdgeInsets.only(
           left: 24.0,
           right: 24.0,
           top: 48.0,
-          bottom: 24.0,
+          bottom: MediaQuery.paddingOf(context).bottom + 16.0,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,

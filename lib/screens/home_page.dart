@@ -1,8 +1,7 @@
 import 'dart:async';
-import 'dart:ui';
 import 'package:material_ui/material_ui.dart';
-import '../theme/app_theme.dart';
 import '../services/watchlist_repository.dart';
+import '../widgets/floating_nav_bar.dart';
 import '../widgets/movie_card.dart';
 import '../widgets/series_card.dart';
 import 'watchlist_page.dart';
@@ -158,51 +157,33 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      bottomNavigationBar: ClipRect(
-        child: BackdropFilter(
-          filter: ImageFilter.blur(
-            sigmaX: AppTheme.glassBlurSigma,
-            sigmaY: AppTheme.glassBlurSigma,
-          ),
-          child: ValueListenableBuilder<int>(
-            valueListenable: _pageIndex,
-            builder: (context, index, _) => BottomNavigationBar(
-              backgroundColor: Colors.white.withValues(
-                alpha: AppTheme.glassOpacity,
-              ),
-              elevation: 0,
-              type: BottomNavigationBarType.fixed,
-              currentIndex: index,
-              onTap: _onNavTap,
-              showSelectedLabels: false,
-              showUnselectedLabels: false,
-              iconSize: 30.0,
-              selectedItemColor: AppTheme.navActiveColor,
-              unselectedItemColor: AppTheme.metaIconColor,
-              items: const [
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.tv_outlined),
-                  activeIcon: Icon(Icons.tv),
-                  label: 'Series',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.movie_outlined),
-                  activeIcon: Icon(Icons.movie),
-                  label: 'Movies',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.search_outlined),
-                  activeIcon: Icon(Icons.search),
-                  label: 'Search',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.person_outline),
-                  activeIcon: Icon(Icons.person),
-                  label: 'Profile',
-                ),
-              ],
+      bottomNavigationBar: ValueListenableBuilder<int>(
+        valueListenable: _pageIndex,
+        builder: (context, index, _) => FloatingNavBar(
+          currentIndex: index,
+          onTap: _onNavTap,
+          items: const [
+            FloatingNavItem(
+              icon: Icons.tv_outlined,
+              activeIcon: Icons.tv,
+              label: 'Series',
             ),
-          ),
+            FloatingNavItem(
+              icon: Icons.movie_outlined,
+              activeIcon: Icons.movie,
+              label: 'Movies',
+            ),
+            FloatingNavItem(
+              icon: Icons.search_outlined,
+              activeIcon: Icons.search,
+              label: 'Search',
+            ),
+            FloatingNavItem(
+              icon: Icons.person_outline,
+              activeIcon: Icons.person,
+              label: 'Profile',
+            ),
+          ],
         ),
       ),
     );
