@@ -9,11 +9,16 @@ import 'services/connectivity_service.dart';
 import 'services/firestore_database_service.dart';
 import 'services/notification_service.dart';
 import 'services/watchlist_repository.dart';
+import 'package:mcp_toolkit/mcp_toolkit.dart';
+import 'package:flutter/foundation.dart';
 
 late final NotificationService notificationService;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  if (kDebugMode) {
+    MCPToolkitBinding.instance.initialize();
+  }
 
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
