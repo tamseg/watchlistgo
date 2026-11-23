@@ -1,5 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:watchlistgo/services/firestore_database_service.dart';
 import 'package:watchlistgo/widgets/custom_snackbar.dart';
 import '../services/watchlist_repository.dart';

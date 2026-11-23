@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import '../services/tmdb_service.dart';
 import '../screens/series_detail_page.dart';
 import 'media_card.dart';
