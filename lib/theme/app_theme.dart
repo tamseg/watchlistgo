@@ -1,23 +1,26 @@
-import 'dart:ui';
+import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
 class AppTheme {
+  static SystemUiOverlayStyle _statusBarFor(Color background) {
+    final isLightBackground =
+        ThemeData.estimateBrightnessForColor(background) == Brightness.light;
+    return SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: isLightBackground
+          ? Brightness.dark
+          : Brightness.light,
+      statusBarBrightness: isLightBackground
+          ? Brightness.light
+          : Brightness.dark,
+    );
+  }
+
   // ─── Glass Aesthetics ────────────────────────────────────────────
   // Centralized frosted glass parameters
   static const double glassBlurSigma = 15.0;
   static const double glassOpacity = 0.5;
 
-  static Widget buildFrostedGlassBackground() {
-    return ClipRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(
-          sigmaX: glassBlurSigma,
-          sigmaY: glassBlurSigma,
-        ),
-        child: Container(color: Colors.white.withValues(alpha: glassOpacity)),
-      ),
-    );
-  }
   // ─── Semantic Colors ─────────────────────────────────────────────
   // Change these in one place to update the entire app.
 
@@ -72,10 +75,11 @@ class AppTheme {
         ), // Using exact electric cyan for primary
       ),
       scaffoldBackgroundColor: scaffoldColor,
-      appBarTheme: const AppBarTheme(
+      appBarTheme: AppBarTheme(
         centerTitle: true,
         backgroundColor: scaffoldColor,
         elevation: 0,
+        systemOverlayStyle: _statusBarFor(scaffoldColor),
       ),
       tabBarTheme: TabBarThemeData(
         indicator: tabPillDecoration,
@@ -125,10 +129,13 @@ class AppTheme {
         ), // Using exact electric cyan for primary
       ),
       scaffoldBackgroundColor: const Color.fromARGB(255, 255, 255, 255),
-      appBarTheme: const AppBarTheme(
+      appBarTheme: AppBarTheme(
         centerTitle: true,
         backgroundColor: scaffoldColor,
         elevation: 0,
+        systemOverlayStyle: _statusBarFor(
+          const Color.fromARGB(255, 255, 255, 255),
+        ),
       ),
       tabBarTheme: TabBarThemeData(
         indicator: tabPillDecoration,

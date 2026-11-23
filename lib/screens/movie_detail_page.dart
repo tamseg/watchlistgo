@@ -27,6 +27,8 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
 
   @override
   Widget build(BuildContext context) {
+    final statusBarHeight = MediaQuery.viewPaddingOf(context).top;
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -41,115 +43,118 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
         ),
       ),
       extendBodyBehindAppBar: true,
-      body: FutureBuilder<List<Map<String, dynamic>?>>(
-        future: Future.wait([_movieData, _movieImages]),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError ||
-              !snapshot.hasData ||
-              snapshot.data![0] == null) {
-            return const Center(child: Text('Error loading details'));
-          }
+      body: Padding(
+        padding: EdgeInsets.only(top: statusBarHeight),
+        child: FutureBuilder<List<Map<String, dynamic>?>>(
+          future: Future.wait([_movieData, _movieImages]),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (snapshot.hasError ||
+                !snapshot.hasData ||
+                snapshot.data![0] == null) {
+              return const Center(child: Text('Error loading details'));
+            }
 
-          final data = snapshot.data![0]!;
-          final imagesData = snapshot.data![1];
+            final data = snapshot.data![0]!;
+            final imagesData = snapshot.data![1];
 
-          final title = data['title'] ?? 'Unknown';
-          final overview = data['overview'] ?? 'No description available.';
-          final backdropPath = data['backdrop_path'];
-          final backdropUrl = backdropPath != null
-              ? 'https://image.tmdb.org/t/p/original$backdropPath'
-              : null;
+            final title = data['title'] ?? 'Unknown';
+            final overview = data['overview'] ?? 'No description available.';
+            final backdropPath = data['backdrop_path'];
+            final backdropUrl = backdropPath != null
+                ? 'https://image.tmdb.org/t/p/original$backdropPath'
+                : null;
 
-          final logoPick = LogoWidget.pickLogo(imagesData);
+            final logoPick = LogoWidget.pickLogo(imagesData);
 
-          final rating = data['vote_average']?.toStringAsFixed(1) ?? 'N/A';
-          final releaseDate = data['release_date'] ?? 'N/A';
-          final runtime = data['runtime']?.toString() ?? 'N/A';
-          final genres =
-              (data['genres'] as List?)?.map((g) => g['name']).join(', ') ??
-              'N/A';
+            final rating = data['vote_average']?.toStringAsFixed(1) ?? 'N/A';
+            final releaseDate = data['release_date'] ?? 'N/A';
+            final runtime = data['runtime']?.toString() ?? 'N/A';
+            final genres =
+                (data['genres'] as List?)?.map((g) => g['name']).join(', ') ??
+                'N/A';
 
-          return SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildBackdropHeader(backdropUrl, logoPick, title),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.star,
-                            color: AppTheme.ratingStarColor,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            rating,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
+            return SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildBackdropHeader(backdropUrl, logoPick, title),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.star,
+                              color: AppTheme.ratingStarColor,
+                              size: 20,
                             ),
-                          ),
-                          const SizedBox(width: 16),
-                          const Icon(
-                            Icons.calendar_today,
-                            color: AppTheme.metaIconColor,
-                            size: 18,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(releaseDate),
-                          const SizedBox(width: 16),
-                          const Icon(
-                            Icons.timer,
-                            color: AppTheme.metaIconColor,
-                            size: 18,
-                          ),
-                          const SizedBox(width: 4),
-                          Text('$runtime min'),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Wrap(
-                        spacing: 8,
-                        children: genres.split(', ').map((genre) {
-                          return Chip(
-                            label: Text(genre),
-                            labelStyle: const TextStyle(fontSize: 12),
-                            padding: EdgeInsets.zero,
-                            materialTapTargetSize:
-                                MaterialTapTargetSize.shrinkWrap,
-                          );
-                        }).toList(),
-                      ),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'Overview',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
+                            const SizedBox(width: 4),
+                            Text(
+                              rating,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            const Icon(
+                              Icons.calendar_today,
+                              color: AppTheme.metaIconColor,
+                              size: 18,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(releaseDate),
+                            const SizedBox(width: 16),
+                            const Icon(
+                              Icons.timer,
+                              color: AppTheme.metaIconColor,
+                              size: 18,
+                            ),
+                            const SizedBox(width: 4),
+                            Text('$runtime min'),
+                          ],
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        overview,
-                        style: const TextStyle(fontSize: 16, height: 1.5),
-                      ),
-                      const SizedBox(height: 32),
-                    ],
+                        const SizedBox(height: 12),
+                        Wrap(
+                          spacing: 8,
+                          children: genres.split(', ').map((genre) {
+                            return Chip(
+                              label: Text(genre),
+                              labelStyle: const TextStyle(fontSize: 12),
+                              padding: EdgeInsets.zero,
+                              materialTapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
+                            );
+                          }).toList(),
+                        ),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'Overview',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          overview,
+                          style: const TextStyle(fontSize: 16, height: 1.5),
+                        ),
+                        const SizedBox(height: 32),
+                      ],
+                    ),
                   ),
-                ),
-              ],
-            ),
-          );
-        },
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }

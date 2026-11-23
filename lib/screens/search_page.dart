@@ -124,9 +124,10 @@ class SearchPageState extends State<SearchPage> {
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         toolbarHeight: 0,
-        backgroundColor: Colors.transparent,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
-        flexibleSpace: AppTheme.buildFrostedGlassBackground(),
+        scrolledUnderElevation: 0,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(84),
           child: Padding(

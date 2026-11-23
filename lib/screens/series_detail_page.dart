@@ -27,6 +27,8 @@ class _SeriesDetailPageState extends State<SeriesDetailPage> {
 
   @override
   Widget build(BuildContext context) {
+    final statusBarHeight = MediaQuery.viewPaddingOf(context).top;
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -41,102 +43,107 @@ class _SeriesDetailPageState extends State<SeriesDetailPage> {
         ),
       ),
       extendBodyBehindAppBar: true,
-      body: FutureBuilder<List<Map<String, dynamic>?>>(
-        future: Future.wait([_seriesData, _seriesImages]),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError ||
-              !snapshot.hasData ||
-              snapshot.data![0] == null) {
-            return const Center(child: Text('Error loading details'));
-          }
+      body: Padding(
+        padding: EdgeInsets.only(top: statusBarHeight),
+        child: FutureBuilder<List<Map<String, dynamic>?>>(
+          future: Future.wait([_seriesData, _seriesImages]),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (snapshot.hasError ||
+                !snapshot.hasData ||
+                snapshot.data![0] == null) {
+              return const Center(child: Text('Error loading details'));
+            }
 
-          final data = snapshot.data![0]!;
-          final imagesData = snapshot.data![1];
+            final data = snapshot.data![0]!;
+            final imagesData = snapshot.data![1];
 
-          final title = data['name'] ?? 'Unknown';
-          final overview = data['overview'] ?? 'No description available.';
-          final backdropPath = data['backdrop_path'];
-          final backdropUrl = backdropPath != null
-              ? 'https://image.tmdb.org/t/p/original$backdropPath'
-              : null;
+            final title = data['name'] ?? 'Unknown';
+            final overview = data['overview'] ?? 'No description available.';
+            final backdropPath = data['backdrop_path'];
+            final backdropUrl = backdropPath != null
+                ? 'https://image.tmdb.org/t/p/original$backdropPath'
+                : null;
 
-          final logoPick = LogoWidget.pickLogo(imagesData);
+            final logoPick = LogoWidget.pickLogo(imagesData);
 
-          final rating = data['vote_average']?.toStringAsFixed(1) ?? 'N/A';
-          final firstAirDate = data['first_air_date'] ?? 'N/A';
-          final status = data['status'] ?? 'N/A';
-          final seasons = data['number_of_seasons']?.toString() ?? 'N/A';
-          final episodes = data['number_of_episodes']?.toString() ?? 'N/A';
-          final genres =
-              (data['genres'] as List?)?.map((g) => g['name']).join(', ') ??
-              'N/A';
+            final rating = data['vote_average']?.toStringAsFixed(1) ?? 'N/A';
+            final firstAirDate = data['first_air_date'] ?? 'N/A';
+            final status = data['status'] ?? 'N/A';
+            final seasons = data['number_of_seasons']?.toString() ?? 'N/A';
+            final episodes = data['number_of_episodes']?.toString() ?? 'N/A';
+            final genres =
+                (data['genres'] as List?)?.map((g) => g['name']).join(', ') ??
+                'N/A';
 
-          return SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildBackdropHeader(backdropUrl, logoPick, title),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.star,
-                            color: AppTheme.ratingStarColor,
-                            size: 20,
+            return SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildBackdropHeader(backdropUrl, logoPick, title),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.star,
+                              color: AppTheme.ratingStarColor,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              rating,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Text('First Aired: $firstAirDate'),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Status: $status | Seasons: $seasons ($episodes episodes)',
+                          style: const TextStyle(
+                            color: AppTheme.secondaryTextColor,
                           ),
-                          const SizedBox(width: 4),
-                          Text(
-                            rating,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 8),
+                        _buildEpisodeBadge(data),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Genres: $genres',
+                          style: const TextStyle(
+                            color: AppTheme.secondaryTextColor,
                           ),
-                          const SizedBox(width: 16),
-                          Text('First Aired: $firstAirDate'),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Status: $status | Seasons: $seasons ($episodes episodes)',
-                        style: const TextStyle(
-                          color: AppTheme.secondaryTextColor,
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      _buildEpisodeBadge(data),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Genres: $genres',
-                        style: const TextStyle(
-                          color: AppTheme.secondaryTextColor,
+                        const Divider(height: 32),
+                        const Text(
+                          'Overview',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                      const Divider(height: 32),
-                      const Text(
-                        'Overview',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
+                        const SizedBox(height: 8),
+                        Text(
+                          overview,
+                          style: const TextStyle(fontSize: 16, height: 1.5),
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        overview,
-                        style: const TextStyle(fontSize: 16, height: 1.5),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ],
-            ),
-          );
-        },
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }
