@@ -1,8 +1,10 @@
 const functions = require('firebase-functions/v2');
-const admin = require('firebase-admin');
+const { initializeApp } = require('firebase-admin/app');
+const { getFirestore } = require('firebase-admin/firestore');
+const { getMessaging } = require('firebase-admin/messaging');
 const axios = require('axios');
 
-admin.initializeApp();
+initializeApp();
 
 const TMDB_ACCESS_TOKEN = process.env.TMDB_ACCESS_TOKEN;
 
@@ -24,26 +26,26 @@ exports.checkAndNotify = functions.scheduler.onSchedule(
   async () => {
     try {
       console.log('Started daily checkAndNotify...');
-      const db = admin.firestore();
+      const db = getFirestore();
       const usersSnap = await db.collection('users').get();
       const tvSubscribers = {};
       const movieSubscribers = {};
       usersSnap.docs.forEach(doc => {
         const data = doc.data();
-        if (!data.fcmToken)
+        if (!data.fid)
           return;
-        const token = data.fcmToken;
+        const fid = data.fid;
         const series = data.followedSeriesIds || [];
         const movies = data.followedMoviesIds || [];
         series.forEach(sId => {
           if (!tvSubscribers[sId])
             tvSubscribers[sId] = [];
-          tvSubscribers[sId].push(token);
+          tvSubscribers[sId].push(fid);
         });
         movies.forEach(mId => {
           if (!movieSubscribers[mId])
             movieSubscribers[mId] = [];
-          movieSubscribers[mId].push(token);
+          movieSubscribers[mId].push(fid);
         });
       });
       console.log(`Found ${Object.keys(tvSubscribers).length} unique TV shows and ${Object.keys(movieSubscribers).length} unique movies to check.`);
@@ -68,7 +70,7 @@ exports.checkAndNotify = functions.scheduler.onSchedule(
              if (stateSnap.exists && !isPast)
              {
                pushesToSend.push({
-                 tokens: tvSubscribers[tvId],
+                 fids: tvSubscribers[tvId],
                  title: `📺 ${tv.name}`,
                  body: `Season ${numSeasons} has been announced!`,
                  type: 'tv', id: String(tvId),
@@ -84,7 +86,7 @@ exports.checkAndNotify = functions.scheduler.onSchedule(
             if (updatedState.lastNotifiedEpisode !== epString)
             {
               pushesToSend.push({
-                tokens: tvSubscribers[tvId],
+                fids: tvSubscribers[tvId],
                 title: `📺 ${tv.name}`,
                 body: `New Episode ${epString} airs today!`,
                 type: 'tv', id: String(tvId),
@@ -113,7 +115,7 @@ exports.checkAndNotify = functions.scheduler.onSchedule(
           if (movie.release_date === today && !state.notifiedRelease)
           {
             pushesToSend.push({
-              tokens: movieSubscribers[movieId],
+              fids: movieSubscribers[movieId],
               title: `🎬 ${movie.title}`,
               body: `Now in theaters!`,
               type: 'movie', id: String(movieId),
@@ -128,11 +130,11 @@ exports.checkAndNotify = functions.scheduler.onSchedule(
       console.log(`Sending ${pushesToSend.length} notification batches...`);
       for (const push of pushesToSend)
       {
-        for (let i = 0; i < push.tokens.length; i += 500)
+        for (let i = 0; i < push.fids.length; i += 500)
         {
-          const batchTokens = push.tokens.slice(i, i + 500);
-          await admin.messaging().sendEachForMulticast({
-            tokens: batchTokens,
+          const batchFids = push.fids.slice(i, i + 500);
+          await getMessaging().sendEachForMulticast({
+            fids: batchFids,
             notification: {
               title: push.title,
               body: push.body,
