@@ -61,12 +61,12 @@ class _CloudBackupCardState extends State<CloudBackupCard> {
 
         if (confirmed == true) {
           await widget.repository.confirmReplace(uid);
-          await _syncToken(uid);
+          await notificationService.syncRegistration();
         } else {
           await _authService.signOut();
         }
       } else {
-        await _syncToken(uid);
+        await notificationService.syncRegistration();
       }
     } catch (e) {
       if (!ctx.mounted) return;
@@ -81,7 +81,7 @@ class _CloudBackupCardState extends State<CloudBackupCard> {
     try {
       final uid = FirebaseAuth.instance.currentUser?.uid;
       if (uid != null) {
-        await notificationService.updateStoredToken(null);
+        await notificationService.updateStoredFid(null);
       }
       await _authService.signOut();
     } catch (e) {
@@ -90,11 +90,6 @@ class _CloudBackupCardState extends State<CloudBackupCard> {
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
-  }
-
-  Future<void> _syncToken(String uid) async {
-    final token = await notificationService.getToken();
-    await notificationService.updateStoredToken(token);
   }
 
   @override

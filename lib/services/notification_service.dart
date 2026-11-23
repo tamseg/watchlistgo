@@ -102,37 +102,36 @@ class NotificationService {
 
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
-    _setupToken();
+    _setupRegistration();
   }
 
-  Future<void> _setupToken() async {
-    try {
-      final token = await _firebaseMessaging.getToken();
-      if (token != null) {
-        await updateStoredToken(token);
-      }
+  // Listen before register() to catch the first event.
+  void _setupRegistration() {
+    _firebaseMessaging.onRegistered.listen(
+      updateStoredFid,
+      onError: (Object e) => debugPrint('FCM registration failed: $e'),
+    );
+    _firebaseMessaging.onUnregistered.listen((_) => updateStoredFid(null));
+    syncRegistration();
+  }
 
-      _firebaseMessaging.onTokenRefresh.listen((newToken) {
-        updateStoredToken(newToken);
-      });
+  Future<void> syncRegistration() async {
+    try {
+      await _firebaseMessaging.register();
     } catch (e) {
-      debugPrint('FCM setup failed: $e');
+      debugPrint('FCM register failed: $e');
     }
   }
 
-  Future<void> updateStoredToken(String? token) async {
+  Future<void> updateStoredFid(String? fid) async {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
-        await _db.updateFcmToken(uid: user.uid, token: token);
+        await _db.updateMessagingFid(uid: user.uid, fid: fid);
       }
     } catch (e) {
-      debugPrint('FCM token update failed: $e');
+      debugPrint('FCM FID update failed: $e');
     }
-  }
-
-  Future<String?> getToken() async {
-    return await _firebaseMessaging.getToken();
   }
 
   Future<void> _showForegroundNotification(RemoteMessage message) async {

@@ -30,5 +30,5 @@ abstract class DatabaseService {
 
   Future<void> clearWatchlists(String uid);
 
-  Future<void> updateFcmToken({required String uid, required String? token});
+  Future<void> updateMessagingFid({required String uid, required String? fid});
 }

@@ -122,12 +122,13 @@ class FirestoreDatabaseService implements DatabaseService {
   }
 
   @override
-  Future<void> updateFcmToken({
+  Future<void> updateMessagingFid({
     required String uid,
-    required String? token,
+    required String? fid,
   }) async {
     await _firestore.collection('users').doc(uid).set({
-      'fcmToken': token,
+      'fid': fid ?? FieldValue.delete(),
+      'fcmToken': FieldValue.delete(),
     }, SetOptions(merge: true));
   }
 

@@ -54,9 +54,9 @@ class FirebaseAuthService implements AuthService {
       final uid = user.uid;
 
       try {
-        await _databaseService.updateFcmToken(uid: uid, token: null);
+        await _databaseService.updateMessagingFid(uid: uid, fid: null);
       } catch (e) {
-        debugPrint('Failed to clear FCM token before account deletion: $e');
+        debugPrint('Failed to clear FCM FID before account deletion: $e');
       }
 
       await _databaseService.deleteUser(uid);
