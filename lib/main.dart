@@ -3,12 +3,14 @@ import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'app.dart';
 import 'firebase_options.dart';
 import 'services/connectivity_service.dart';
 import 'services/firestore_database_service.dart';
 import 'services/notification_service.dart';
 import 'services/watchlist_repository.dart';
+import 'theme/theme_controller.dart';
 import 'package:mcp_toolkit/mcp_toolkit.dart';
 import 'package:flutter/foundation.dart';
 
@@ -25,8 +27,12 @@ void main() async {
     DeviceOrientation.portraitDown,
   ]);
 
+  final prefs = await SharedPreferences.getInstance();
   await dotenv.load(fileName: ".env");
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   await GoogleSignIn.instance.initialize();
 
   final connectivity = ConnectivityService();
@@ -37,5 +43,17 @@ void main() async {
   notificationService = NotificationService(db: db);
   await notificationService.init();
 
-  runApp(WatchlistGo(repository: repository));
+  final themeController = ThemeController(prefs);
+
+  runApp(
+    // ListenableBuilder(
+      // listenable: themeController,
+      // builder: (context, child) {
+        WatchlistGo(
+          repository: repository,
+          themeController: themeController,
+        ),
+      // },
+    // ),
+  );
 }

@@ -5,11 +5,17 @@ import '../services/watchlist_repository.dart';
 import 'watchlist_page.dart';
 import 'search_page.dart';
 import 'profile_page.dart';
+import '../theme/theme_controller.dart';
 
 class HomePage extends StatefulWidget {
   final WatchlistRepository repository;
+  final ThemeController themeController;
 
-  const HomePage({super.key, required this.repository});
+  const HomePage({
+    super.key,
+    required this.repository,
+    required this.themeController,
+  });
 
   @override
   State<HomePage> createState() => _HomePageState();

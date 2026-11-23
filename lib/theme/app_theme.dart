@@ -60,54 +60,111 @@ class AppTheme {
 
   // ─── Theme Data ──────────────────────────────────────────────────
 
-  static final ThemeData lightTheme = ThemeData(
-    useMaterial3: true,
-    colorScheme: ColorScheme.fromSeed(
-      seedColor: const Color(
-        0xFF5edde0,
-      ), // Using exact electric cyan for the seed
-      primary: const Color(0xFF5edde0), // Using exact electric cyan for primary
-    ),
-    scaffoldBackgroundColor: scaffoldColor,
-    appBarTheme: const AppBarTheme(
-      centerTitle: true,
-      backgroundColor: scaffoldColor,
-      elevation: 0,
-    ),
-    tabBarTheme: TabBarThemeData(
-      indicator: tabPillDecoration,
-      indicatorSize: TabBarIndicatorSize.tab,
-      indicatorColor: primaryColor,
-      dividerColor: Colors.transparent,
-      labelColor: Colors.white,
-      unselectedLabelColor: darkTextColor,
-      labelStyle: const TextStyle(fontWeight: FontWeight.bold),
-      unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
-    ),
-    textTheme: TextTheme(
-      headlineLarge: const TextStyle(
-        fontSize: 24,
-        fontWeight: FontWeight.bold,
-        letterSpacing: 0.5,
-        color: darkTextColor,
+  static ThemeData get lightTheme {
+    return ThemeData(
+      useMaterial3: true,
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: const Color(
+          0xFF5edde0,
+        ), // Using exact electric cyan for the seed
+        primary: const Color(
+          0xFF5edde0,
+        ), // Using exact electric cyan for primary
       ),
-      headlineMedium: const TextStyle(
-        fontSize: 16,
-        fontWeight: FontWeight.bold,
-        color: darkTextColor,
+      scaffoldBackgroundColor: scaffoldColor,
+      appBarTheme: const AppBarTheme(
+        centerTitle: true,
+        backgroundColor: scaffoldColor,
+        elevation: 0,
       ),
-      bodyMedium: const TextStyle(
-        fontSize: 14,
-        fontWeight: FontWeight.w600,
-        color: Color(0xFF616161),
+      tabBarTheme: TabBarThemeData(
+        indicator: tabPillDecoration,
+        indicatorSize: TabBarIndicatorSize.tab,
+        indicatorColor: primaryColor,
+        dividerColor: Colors.transparent,
+        labelColor: Colors.white,
+        unselectedLabelColor: darkTextColor,
+        labelStyle: const TextStyle(fontWeight: FontWeight.bold),
+        unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
       ),
-      labelMedium: TextStyle(
-        fontSize: 13,
-        fontWeight: FontWeight.w400,
-        color: secondaryTextColor.withValues(alpha: 0.7),
+      textTheme: TextTheme(
+        headlineLarge: const TextStyle(
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 0.5,
+          color: darkTextColor,
+        ),
+        headlineMedium: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: darkTextColor,
+        ),
+        bodyMedium: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF616161),
+        ),
+        labelMedium: TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w400,
+          color: secondaryTextColor.withValues(alpha: 0.7),
+        ),
       ),
-    ),
-  );
+    );
+  }
+
+  static ThemeData get darkTheme {
+    return ThemeData(
+      useMaterial3: true,
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: const Color(
+          0xFF5edde0,
+        ), // Using exact electric cyan for the seed
+        primary: const Color(
+          0xFF5edde0,
+        ), // Using exact electric cyan for primary
+      ),
+      scaffoldBackgroundColor: const Color.fromARGB(255, 255, 255, 255),
+      appBarTheme: const AppBarTheme(
+        centerTitle: true,
+        backgroundColor: scaffoldColor,
+        elevation: 0,
+      ),
+      tabBarTheme: TabBarThemeData(
+        indicator: tabPillDecoration,
+        indicatorSize: TabBarIndicatorSize.tab,
+        indicatorColor: primaryColor,
+        dividerColor: Colors.transparent,
+        labelColor: Colors.white,
+        unselectedLabelColor: darkTextColor,
+        labelStyle: const TextStyle(fontWeight: FontWeight.bold),
+        unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
+      ),
+      textTheme: TextTheme(
+        headlineLarge: const TextStyle(
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 0.5,
+          color: darkTextColor,
+        ),
+        headlineMedium: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: darkTextColor,
+        ),
+        bodyMedium: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF616161),
+        ),
+        labelMedium: TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w400,
+          color: secondaryTextColor.withValues(alpha: 0.7),
+        ),
+      ),
+    );
+  }
 
   // ─── Layout Constants ────────────────────────────────────────────
 
