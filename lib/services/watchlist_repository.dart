@@ -42,8 +42,35 @@ class WatchlistRepository {
     _connectivitySub = _connectivity.onConnectivityChanged.listen((connected) {
       if (connected) _flushQueue();
     });
-    if (await _connectivity.isConnected) {
-      _flushQueue();
+    unawaited(_syncWithCloudOnStartup());
+  }
+
+  Future<void> _syncWithCloudOnStartup() async {
+    final user = await FirebaseAuth.instance.authStateChanges().first;
+    if (user == null || !await _connectivity.isConnected) return;
+
+    await _flushQueue();
+    if (await _queue.hasPending) return;
+
+    try {
+      final cloudSeries = await _db.getFollowedSeriesIds(user.uid);
+      final cloudMovies = await _db.getFollowedMoviesIds(user.uid);
+
+      final cloudEmpty = cloudSeries.isEmpty && cloudMovies.isEmpty;
+      final localEmpty = _seriesIds.isEmpty && _moviesIds.isEmpty;
+      if (cloudEmpty && !localEmpty) return;
+
+      if (!listEquals(cloudSeries, _seriesIds)) {
+        _seriesIds = cloudSeries;
+        _seriesController.add(_seriesIds);
+      }
+      if (!listEquals(cloudMovies, _moviesIds)) {
+        _moviesIds = cloudMovies;
+        _moviesController.add(_moviesIds);
+      }
+      await _saveLocal();
+    } catch (e) {
+      debugPrint('Startup cloud refresh failed: $e');
     }
   }
 
