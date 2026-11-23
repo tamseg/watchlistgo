@@ -1,10 +1,12 @@
 import 'package:material_ui/material_ui.dart';
+import '../theme/app_theme.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../main.dart';
 import '../services/firebase_auth_service.dart';
 import '../services/firestore_database_service.dart';
 import '../services/watchlist_repository.dart';
 import 'custom_snackbar.dart';
+import 'provider_link_button.dart';
 
 class CloudBackupCard extends StatefulWidget {
   final WatchlistRepository repository;
@@ -97,73 +99,113 @@ class _CloudBackupCardState extends State<CloudBackupCard> {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 0,
-      color: Theme.of(context).cardColor,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey.shade800),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: StreamBuilder<User?>(
-          stream: _authService.authStateChanges,
-          builder: (builderContext, snapshot) {
-            final isLinked = snapshot.hasData && snapshot.data != null;
+    return StreamBuilder<User?>(
+      stream: _authService.authStateChanges,
+      builder: (builderContext, snapshot) {
+        final user = snapshot.data;
+        final isLinked = snapshot.hasData && user != null;
 
-            return Column(
+        String? activeProviderId;
+        if (isLinked && user.providerData.isNotEmpty) {
+          activeProviderId = user.providerData.first.providerId;
+        }
+
+        return Container(
+          decoration: BoxDecoration(
+            color: AppTheme.scaffoldColor,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.08),
+                blurRadius: 4,
+                spreadRadius: 4,
+                offset: Offset.zero,
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(
-                  Icons.cloud_sync_outlined,
-                  size: 48,
-                  color: Colors.blueAccent,
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Sync Across Devices',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  isLinked
-                      ? 'Your watchlists are safely backed up to the cloud and synced across devices.'
-                      : 'Link your Google account to back up and sync your watchlists across devices automatically.',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.grey, height: 1.4),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (isLinked) ...[
+                      CircleAvatar(
+                        radius: 25,
+                        backgroundColor: Colors.grey.shade200,
+                        backgroundImage: user.photoURL != null
+                            ? NetworkImage(user.photoURL!)
+                            : null,
+                        child: user.photoURL == null
+                            ? const Icon(
+                                Icons.person,
+                                size: 30,
+                                color: Colors.grey,
+                              )
+                            : null,
+                      ),
+                      const SizedBox(width: 16),
+                    ],
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Cloud Backup',
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.darkTextColor,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            isLinked
+                                ? 'Linked via ${_getProviderDisplayName(activeProviderId)}'
+                                : 'Connect an account to safely back up and sync your watchlists.',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: AppTheme.secondaryTextColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 24),
-                if (_isLoading)
-                  const CircularProgressIndicator()
-                else
-                  ElevatedButton.icon(
-                    icon: Icon(isLinked ? Icons.cloud_off : Icons.link),
-                    label: Text(
-                      isLinked
-                          ? 'Disconnect Google Account'
-                          : 'Link Google Account',
-                    ),
-                    onPressed: () {
-                      if (isLinked) {
-                        _handleUnlink(builderContext);
-                      } else {
-                        _handleLink(builderContext);
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 12,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                  ),
+                ProviderLinkButton(
+                  providerId: activeProviderId ?? 'google.com',
+                  isLinked: isLinked,
+                  isLoading: _isLoading,
+                  onPressed: () {
+                    if (isLinked) {
+                      _handleUnlink(builderContext);
+                    } else {
+                      _handleLink(builderContext);
+                    }
+                  },
+                ),
               ],
-            );
-          },
-        ),
-      ),
+            ),
+          ),
+        );
+      },
     );
+  }
+
+  String _getProviderDisplayName(String? providerId) {
+    switch (providerId) {
+      case 'google.com':
+        return 'Google';
+      case 'facebook.com':
+        return 'Meta';
+      case 'apple.com':
+        return 'Apple';
+      default:
+        return 'Account';
+    }
   }
 }

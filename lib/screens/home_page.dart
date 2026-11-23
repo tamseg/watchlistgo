@@ -94,7 +94,10 @@ class _HomePageState extends State<HomePage> {
             onAddSeries: _addSeries,
             onAddMovie: _addMovie,
           ),
-          ProfilePage(repository: widget.repository),
+          ProfilePage(
+            repository: widget.repository,
+            themeController: widget.themeController,
+          ),
         ],
       ),
       bottomNavigationBar: ClipRect(
