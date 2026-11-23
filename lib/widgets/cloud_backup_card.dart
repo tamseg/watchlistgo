@@ -113,7 +113,11 @@ class _CloudBackupCardState extends State<CloudBackupCard> {
 
             return Column(
               children: [
-                const Icon(Icons.cloud_sync_outlined, size: 48, color: Colors.blueAccent),
+                const Icon(
+                  Icons.cloud_sync_outlined,
+                  size: 48,
+                  color: Colors.blueAccent,
+                ),
                 const SizedBox(height: 16),
                 const Text(
                   'Sync Across Devices',
@@ -133,7 +137,11 @@ class _CloudBackupCardState extends State<CloudBackupCard> {
                 else
                   ElevatedButton.icon(
                     icon: Icon(isLinked ? Icons.cloud_off : Icons.link),
-                    label: Text(isLinked ? 'Disconnect Google Account' : 'Link Google Account'),
+                    label: Text(
+                      isLinked
+                          ? 'Disconnect Google Account'
+                          : 'Link Google Account',
+                    ),
                     onPressed: () {
                       if (isLinked) {
                         _handleUnlink(builderContext);
@@ -142,7 +150,10 @@ class _CloudBackupCardState extends State<CloudBackupCard> {
                       }
                     },
                     style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),

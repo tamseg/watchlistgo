@@ -33,8 +33,9 @@ class LogoWidget extends StatefulWidget {
       final aEn = a['iso_639_1'] == 'en' ? 0 : 1;
       final bEn = b['iso_639_1'] == 'en' ? 0 : 1;
       if (aEn != bEn) return aEn.compareTo(bEn);
-      return ((b['vote_average'] ?? 0) as num)
-          .compareTo((a['vote_average'] ?? 0) as num);
+      return ((b['vote_average'] ?? 0) as num).compareTo(
+        (a['vote_average'] ?? 0) as num,
+      );
     });
 
     Map<String, dynamic>? pick;
@@ -118,7 +119,8 @@ class _LogoWidgetState extends State<LogoWidget> {
           logoColor = logoPalette.dominantColor?.color ?? Colors.black;
           if (logoPalette.paletteColors.length > 3) {
             final total = logoPalette.paletteColors.fold(
-              0, (sum, c) => sum + c.population,
+              0,
+              (sum, c) => sum + c.population,
             );
             final dominantPop = logoPalette.dominantColor?.population ?? 0;
             if (dominantPop / total < 0.5) {
@@ -154,8 +156,7 @@ class _LogoWidgetState extends State<LogoWidget> {
   }
 
   Future<Color> _sampleBackdropBehindLogo() async {
-    final smallUrl =
-        widget.backdropUrl!.replaceFirst('/original/', '/w780/');
+    final smallUrl = widget.backdropUrl!.replaceFirst('/original/', '/w780/');
     final provider = CachedNetworkImageProvider(smallUrl);
     final stream = provider.resolve(const ImageConfiguration());
     final completer = Completer<ImageInfo>();
@@ -250,10 +251,7 @@ class _LogoWidgetState extends State<LogoWidget> {
   @override
   Widget build(BuildContext context) {
     if (!_tintResolved) {
-      return SizedBox(
-        width: widget.maxWidth,
-        height: widget.maxHeight,
-      );
+      return SizedBox(width: widget.maxWidth, height: widget.maxHeight);
     }
 
     if (widget.isSvg) {
@@ -265,10 +263,8 @@ class _LogoWidgetState extends State<LogoWidget> {
           width: widget.maxWidth,
           height: widget.maxHeight,
           colorFilter: _svgTint,
-          placeholderBuilder: (_) => SizedBox(
-            width: widget.maxWidth,
-            height: widget.maxHeight,
-          ),
+          placeholderBuilder: (_) =>
+              SizedBox(width: widget.maxWidth, height: widget.maxHeight),
         );
       }
       return SvgPicture.network(
@@ -278,10 +274,8 @@ class _LogoWidgetState extends State<LogoWidget> {
         width: widget.maxWidth,
         height: widget.maxHeight,
         colorFilter: _svgTint,
-        placeholderBuilder: (_) => SizedBox(
-          width: widget.maxWidth,
-          height: widget.maxHeight,
-        ),
+        placeholderBuilder: (_) =>
+            SizedBox(width: widget.maxWidth, height: widget.maxHeight),
       );
     }
 

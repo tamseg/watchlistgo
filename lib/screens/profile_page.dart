@@ -20,7 +20,12 @@ class ProfilePage extends StatelessWidget {
         flexibleSpace: AppTheme.buildFrostedGlassBackground(),
       ),
       body: Padding(
-        padding: const EdgeInsets.only(left: 24.0, right: 24.0, top: 48.0, bottom: 24.0),
+        padding: const EdgeInsets.only(
+          left: 24.0,
+          right: 24.0,
+          top: 48.0,
+          bottom: 24.0,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -29,15 +34,9 @@ class ProfilePage extends StatelessWidget {
             ListTile(
               title: const Text(
                 'Actions',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w500,
-                ),
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.w500),
               ),
-              trailing: const Icon(
-                Icons.chevron_right,
-                size: 32,
-              ),
+              trailing: const Icon(Icons.chevron_right, size: 32),
               onTap: () {
                 Navigator.push(
                   context,

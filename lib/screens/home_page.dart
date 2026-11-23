@@ -93,9 +93,14 @@ class _HomePageState extends State<HomePage> {
       ),
       bottomNavigationBar: ClipRect(
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: AppTheme.glassBlurSigma, sigmaY: AppTheme.glassBlurSigma),
+          filter: ImageFilter.blur(
+            sigmaX: AppTheme.glassBlurSigma,
+            sigmaY: AppTheme.glassBlurSigma,
+          ),
           child: BottomNavigationBar(
-            backgroundColor: Colors.white.withValues(alpha: AppTheme.glassOpacity),
+            backgroundColor: Colors.white.withValues(
+              alpha: AppTheme.glassOpacity,
+            ),
             elevation: 0,
             currentIndex: _bottomNavIndex,
             onTap: (index) {

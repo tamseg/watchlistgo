@@ -9,7 +9,8 @@ class ActionMenu extends StatefulWidget {
   State<ActionMenu> createState() => _ActionMenuState();
 }
 
-class _ActionMenuState extends State<ActionMenu> with SingleTickerProviderStateMixin {
+class _ActionMenuState extends State<ActionMenu>
+    with SingleTickerProviderStateMixin {
   final LayerLink _layerLink = LayerLink();
   OverlayEntry? _overlayEntry;
   late AnimationController _animationController;
@@ -108,10 +109,17 @@ class _ActionMenuState extends State<ActionMenu> with SingleTickerProviderStateM
                             _closeMenu().then((_) => widget.onRemove());
                           },
                           child: const Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 16.0,
+                              vertical: 14.0,
+                            ),
                             child: Row(
                               children: [
-                                Icon(Icons.delete_outline, color: Colors.red, size: 20),
+                                Icon(
+                                  Icons.delete_outline,
+                                  color: Colors.red,
+                                  size: 20,
+                                ),
                                 SizedBox(width: 12),
                                 Text(
                                   'Remove',

@@ -11,11 +11,11 @@ import '../screens/movie_detail_page.dart';
 
 const _channelId = 'watchlstgo_notifications';
 const _channelName = 'Watchlist Notifications';
-const _channelDescription = 'Notifications for new episodes and movie releases.';
+const _channelDescription =
+    'Notifications for new episodes and movie releases.';
 
 @pragma('vm:entry-point')
-Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-}
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {}
 
 void _handleNotificationRouting(Map<String, dynamic> data) {
   final type = data['type'];
@@ -28,9 +28,15 @@ void _handleNotificationRouting(Map<String, dynamic> data) {
   final context = navigatorKey.currentContext;
   if (context != null) {
     if (type == 'tv') {
-      Navigator.push(context, MaterialPageRoute(builder: (_) => SeriesDetailPage(seriesId: id)));
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => SeriesDetailPage(seriesId: id)),
+      );
     } else if (type == 'movie') {
-      Navigator.push(context, MaterialPageRoute(builder: (_) => MovieDetailPage(movieId: id)));
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => MovieDetailPage(movieId: id)),
+      );
     }
   }
 }
@@ -75,7 +81,8 @@ class NotificationService {
 
     await _localNotifications
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
+          AndroidFlutterLocalNotificationsPlugin
+        >()
         ?.createNotificationChannel(androidChannel);
 
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
@@ -163,7 +170,9 @@ class NotificationService {
             importance: Importance.max,
             priority: Priority.high,
             icon: 'ic_notification',
-            largeIcon: largeIconPath != null ? FilePathAndroidBitmap(largeIconPath) : null,
+            largeIcon: largeIconPath != null
+                ? FilePathAndroidBitmap(largeIconPath)
+                : null,
             styleInformation: bigPictureStyle,
           ),
         ),

@@ -140,7 +140,10 @@ class SearchPageState extends State<SearchPage> {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12.0),
                 border: !_searchFocusNode.hasFocus
-                    ? Border.all(color: Colors.grey.withValues(alpha: 0.3), width: 1.0)
+                    ? Border.all(
+                        color: Colors.grey.withValues(alpha: 0.3),
+                        width: 1.0,
+                      )
                     : null,
                 gradient: _searchFocusNode.hasFocus
                     ? const LinearGradient(

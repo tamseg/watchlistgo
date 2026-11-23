@@ -8,7 +8,7 @@ class GradientPillSwitch extends StatelessWidget {
   const GradientPillSwitch({
     super.key,
     required this.animationValue,
-    required this.onChanged
+    required this.onChanged,
   });
 
   @override
@@ -26,7 +26,7 @@ class GradientPillSwitch extends StatelessWidget {
         height: height,
         decoration: BoxDecoration(
           color: const Color.fromARGB(59, 209, 203, 203),
-          borderRadius: BorderRadius.circular(25.0)
+          borderRadius: BorderRadius.circular(25.0),
         ),
         child: Stack(
           children: [
@@ -53,26 +53,31 @@ class GradientPillSwitch extends StatelessWidget {
                   decoration: BoxDecoration(
                     boxShadow: [
                       BoxShadow(
-                        color: const Color.fromARGB(255, 206, 198, 198).withValues(alpha: 0.5),
+                        color: const Color.fromARGB(
+                          255,
+                          206,
+                          198,
+                          198,
+                        ).withValues(alpha: 0.5),
                         blurRadius: 3.5,
-                        offset: const Offset(0, 0)
-                      )
+                        offset: const Offset(0, 0),
+                      ),
                     ],
                     borderRadius: BorderRadius.circular(23.5),
                     gradient: AppTheme.primaryGradient,
-                  )
-                )
-              )
+                  ),
+                ),
+              ),
             ),
             Row(
               children: [
                 _buildLabel('My Series', animationValue < 0.5),
                 _buildLabel('My Movies', animationValue >= 0.5),
-              ]
-            )
-          ]
-        )
-      )
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -82,12 +87,14 @@ class GradientPillSwitch extends StatelessWidget {
         child: Text(
           text,
           style: TextStyle(
-            color: isSelected ? Colors.white : const Color.fromARGB(176, 39, 38, 38),
+            color: isSelected
+                ? Colors.white
+                : const Color.fromARGB(176, 39, 38, 38),
             fontWeight: FontWeight.bold,
-            fontSize: 16
-          )
-        )
-      )
+            fontSize: 16,
+          ),
+        ),
+      ),
     );
   }
 }

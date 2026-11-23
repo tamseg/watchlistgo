@@ -22,7 +22,9 @@ class TMDBService {
         await prefs.setString(cacheKey, response.body);
         return json.decode(response.body);
       }
-      debugPrint('TMDB API returned status ${response.statusCode} for $cacheKey');
+      debugPrint(
+        'TMDB API returned status ${response.statusCode} for $cacheKey',
+      );
     } catch (e) {
       debugPrint('TMDB fetch failed for $cacheKey, falling back to cache: $e');
     }

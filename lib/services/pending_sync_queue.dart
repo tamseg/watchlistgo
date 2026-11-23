@@ -9,10 +9,7 @@ class SyncOperation {
 
   SyncOperation({required this.type, required this.id});
 
-  Map<String, dynamic> toJson() => {
-    'type': type.name,
-    'id': id,
-  };
+  Map<String, dynamic> toJson() => {'type': type.name, 'id': id};
 
   factory SyncOperation.fromJson(Map<String, dynamic> json) => SyncOperation(
     type: SyncOpType.values.byName(json['type'] as String),
@@ -35,7 +32,9 @@ class PendingSyncQueue {
     final raw = prefs.getStringList(_queueKey) ?? [];
     await prefs.setStringList(_queueKey, []);
     return raw
-        .map((e) => SyncOperation.fromJson(jsonDecode(e) as Map<String, dynamic>))
+        .map(
+          (e) => SyncOperation.fromJson(jsonDecode(e) as Map<String, dynamic>),
+        )
         .toList();
   }
 

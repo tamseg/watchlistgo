@@ -93,7 +93,10 @@ class _SeriesCardState extends State<SeriesCard>
             ],
           );
         } else {
-          subtitleWidget = Text('No upcoming episodes', style: theme.bodyMedium);
+          subtitleWidget = Text(
+            'No upcoming episodes',
+            style: theme.bodyMedium,
+          );
         }
 
         return MediaCard(

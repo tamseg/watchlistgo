@@ -67,7 +67,8 @@ class FirebaseAuthService implements AuthService {
         if (e.code == 'requires-recent-login') {
           throw FirebaseAuthException(
             code: 'requires-recent-login',
-            message: 'For your security, please Unlink and Link your Google account again before forgetting your profile.',
+            message:
+                'For your security, please Unlink and Link your Google account again before forgetting your profile.',
           );
         }
         rethrow;

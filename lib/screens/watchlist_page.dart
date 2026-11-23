@@ -15,7 +15,7 @@ class WatchlistPage extends StatefulWidget {
     required this.followedMoviesIds,
     required this.onRemoveSeries,
     required this.onRemoveMovie,
-    super.key
+    super.key,
   });
   @override
   State<WatchlistPage> createState() => _WatchlistPageState();
@@ -47,20 +47,20 @@ class _WatchlistPageState extends State<WatchlistPage>
           Icon(
             icon,
             size: 64,
-            color: AppTheme.metaIconColor.withValues(alpha: 0.5)
+            color: AppTheme.metaIconColor.withValues(alpha: 0.5),
           ),
           const SizedBox(height: 16),
           Text(
             'Your ${type.toLowerCase()} watchlist is empty.',
-            style: const TextStyle(color: AppTheme.metaIconColor, fontSize: 16)
+            style: const TextStyle(color: AppTheme.metaIconColor, fontSize: 16),
           ),
           const SizedBox(height: 8),
           const Text(
             'Go to Search to find your favorites!',
-            style: TextStyle(color: AppTheme.metaIconColor, fontSize: 16)
-          )
-        ]
-      )
+            style: TextStyle(color: AppTheme.metaIconColor, fontSize: 16),
+          ),
+        ],
+      ),
     );
   }
 
@@ -84,12 +84,12 @@ class _WatchlistPageState extends State<WatchlistPage>
                   animationValue: _tabController.animation!.value,
                   onChanged: (isMovies) {
                     _tabController.animateTo(isMovies ? 1 : 0);
-                  }
+                  },
                 );
-              }
-            )
-          )
-        )
+              },
+            ),
+          ),
+        ),
       ),
       body: TabBarView(
         controller: _tabController,
@@ -101,15 +101,15 @@ class _WatchlistPageState extends State<WatchlistPage>
                     left: 14.0,
                     right: 14.0,
                     top: 130.0,
-                    bottom: 64.0
+                    bottom: 64.0,
                   ),
                   children: widget.followedSeriesIds.map((id) {
                     return SeriesCard(
                       key: ValueKey('series_$id'),
                       seriesId: id,
-                      onRemove: () => widget.onRemoveSeries(id)
+                      onRemove: () => widget.onRemoveSeries(id),
                     );
-                  }).toList()
+                  }).toList(),
                 ),
           widget.followedMoviesIds.isEmpty
               ? _buildEmptyState('Movies')
@@ -118,18 +118,18 @@ class _WatchlistPageState extends State<WatchlistPage>
                     left: 14.0,
                     right: 14.0,
                     top: 130.0,
-                    bottom: 64.0
+                    bottom: 64.0,
                   ),
                   children: widget.followedMoviesIds.map((id) {
                     return MovieCard(
                       key: ValueKey('movie_$id'),
                       movieId: id,
-                      onRemove: () => widget.onRemoveMovie(id)
+                      onRemove: () => widget.onRemoveMovie(id),
                     );
-                  }).toList()
-                )
-        ]
-      )
+                  }).toList(),
+                ),
+        ],
+      ),
     );
   }
 }

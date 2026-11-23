@@ -70,7 +70,10 @@ class FirestoreDatabaseService implements DatabaseService {
   }
 
   @override
-  Future<void> removeSeries({required String uid, required int seriesId}) async {
+  Future<void> removeSeries({
+    required String uid,
+    required int seriesId,
+  }) async {
     await _firestore.collection('users').doc(uid).set({
       'followedSeriesIds': FieldValue.arrayRemove([seriesId]),
     }, SetOptions(merge: true));
@@ -100,20 +103,29 @@ class FirestoreDatabaseService implements DatabaseService {
     }, SetOptions(merge: true));
   }
 
-  Future<void> setFollowedSeriesIds({required String uid, required List<int> ids}) async {
+  Future<void> setFollowedSeriesIds({
+    required String uid,
+    required List<int> ids,
+  }) async {
     await _firestore.collection('users').doc(uid).set({
       'followedSeriesIds': ids.isEmpty ? FieldValue.delete() : ids,
     }, SetOptions(merge: true));
   }
 
-  Future<void> setFollowedMoviesIds({required String uid, required List<int> ids}) async {
+  Future<void> setFollowedMoviesIds({
+    required String uid,
+    required List<int> ids,
+  }) async {
     await _firestore.collection('users').doc(uid).set({
       'followedMoviesIds': ids.isEmpty ? FieldValue.delete() : ids,
     }, SetOptions(merge: true));
   }
 
   @override
-  Future<void> updateFcmToken({required String uid, required String? token}) async {
+  Future<void> updateFcmToken({
+    required String uid,
+    required String? token,
+  }) async {
     await _firestore.collection('users').doc(uid).set({
       'fcmToken': token,
     }, SetOptions(merge: true));

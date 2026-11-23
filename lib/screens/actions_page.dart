@@ -25,7 +25,8 @@ class _ActionsPageState extends State<ActionsPage> {
         return AlertDialog(
           title: const Text('Clear all watchlists?'),
           content: const Text(
-              'Are you sure you want to remove all saved movies and TV shows? Your profile and settings will remain, but your lists will be completely emptied. This cannot be undone.'),
+            'Are you sure you want to remove all saved movies and TV shows? Your profile and settings will remain, but your lists will be completely emptied. This cannot be undone.',
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext),
@@ -38,7 +39,10 @@ class _ActionsPageState extends State<ActionsPage> {
                 try {
                   await widget.repository.clearAll();
                   if (context.mounted) {
-                    showCustomSnackBar(context, 'Watchlists cleared successfully.');
+                    showCustomSnackBar(
+                      context,
+                      'Watchlists cleared successfully.',
+                    );
                   }
                 } catch (e) {
                   if (context.mounted) {
@@ -66,7 +70,8 @@ class _ActionsPageState extends State<ActionsPage> {
         return AlertDialog(
           title: const Text('Permanently forget your profile?'),
           content: const Text(
-              'This will permanently erase your profile, wipe your cloud backups, and delete all your watchlists and notification settings. We will have no record of you. This cannot be undone.'),
+            'This will permanently erase your profile, wipe your cloud backups, and delete all your watchlists and notification settings. We will have no record of you. This cannot be undone.',
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext),
@@ -83,13 +88,17 @@ class _ActionsPageState extends State<ActionsPage> {
                 try {
                   await widget.repository.clearAll();
                   await widget.repository.forgetLocalLink();
-                  await FirebaseAuthService(FirestoreDatabaseService()).deleteAccount();
+                  await FirebaseAuthService(
+                    FirestoreDatabaseService(),
+                  ).deleteAccount();
                   if (context.mounted) {
                     Navigator.of(context).popUntil((route) => route.isFirst);
                   }
                 } on FirebaseAuthException catch (e) {
                   if (context.mounted) {
-                    final message = e.code == 'requires-recent-login' ? e.message! : 'Error forgetting profile: $e';
+                    final message = e.code == 'requires-recent-login'
+                        ? e.message!
+                        : 'Error forgetting profile: $e';
                     showDialog(
                       context: context,
                       builder: (ctx) => AlertDialog(
@@ -106,7 +115,10 @@ class _ActionsPageState extends State<ActionsPage> {
                   }
                 } catch (e) {
                   if (context.mounted) {
-                    showCustomSnackBar(context, 'An unexpected error occurred: $e');
+                    showCustomSnackBar(
+                      context,
+                      'An unexpected error occurred: $e',
+                    );
                   }
                 } finally {
                   if (mounted) setState(() => _isForgetting = false);
@@ -136,12 +148,17 @@ class _ActionsPageState extends State<ActionsPage> {
                 side: const BorderSide(color: Colors.red),
                 padding: const EdgeInsets.symmetric(vertical: 16),
               ),
-              onPressed: _isClearing || _isForgetting ? null : () => _showClearConfirmation(context),
+              onPressed: _isClearing || _isForgetting
+                  ? null
+                  : () => _showClearConfirmation(context),
               child: _isClearing
                   ? const SizedBox(
                       height: 20,
                       width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.red),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.red,
+                      ),
                     )
                   : const Text('Clear Watchlists'),
             ),
@@ -153,12 +170,17 @@ class _ActionsPageState extends State<ActionsPage> {
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
-                onPressed: _isClearing || _isForgetting ? null : () => _showForgetMeConfirmation(context),
+                onPressed: _isClearing || _isForgetting
+                    ? null
+                    : () => _showForgetMeConfirmation(context),
                 child: _isForgetting
                     ? const SizedBox(
                         height: 20,
                         width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
                       )
                     : const Text('Forget Me'),
               ),

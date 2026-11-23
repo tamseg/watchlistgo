@@ -7,6 +7,7 @@ import 'firestore_database_service.dart';
 import 'pending_sync_queue.dart';
 
 enum LinkResult { synced, merged, conflictNeedsConfirmation }
+
 enum SaveTarget { series, movies, all }
 
 class WatchlistRepository {
@@ -28,7 +29,8 @@ class WatchlistRepository {
   WatchlistRepository({
     required FirestoreDatabaseService db,
     required ConnectivityService connectivity,
-  }) : _db = db, _connectivity = connectivity;
+  }) : _db = db,
+       _connectivity = connectivity;
 
   Stream<List<int>> get seriesStream => _seriesController.stream;
   Stream<List<int>> get moviesStream => _moviesController.stream;
