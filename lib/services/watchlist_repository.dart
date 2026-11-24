@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'connectivity_service.dart';
-import 'firestore_database_service.dart';
+import 'database_service.dart';
 import 'pending_sync_queue.dart';
 
 enum LinkResult { synced, merged, conflictNeedsConfirmation }
@@ -15,8 +15,10 @@ class WatchlistRepository {
   static const _moviesKey = 'followedMoviesIds';
   static const _lastLinkedUidKey = 'lastLinkedUid';
 
-  final FirestoreDatabaseService _db;
+  final DatabaseService _db;
   final ConnectivityService _connectivity;
+  final String? Function() _currentUid;
+  final Future<String?> Function() _restoredUid;
   final PendingSyncQueue _queue = PendingSyncQueue();
 
   final _seriesController = StreamController<List<int>>.broadcast();
@@ -26,11 +28,22 @@ class WatchlistRepository {
   List<int> _seriesIds = [];
   List<int> _moviesIds = [];
 
+  @visibleForTesting
+  Future<void> startupSync = Future.value();
+
   WatchlistRepository({
-    required FirestoreDatabaseService db,
+    required DatabaseService db,
     required ConnectivityService connectivity,
+    String? Function()? currentUid,
+    Future<String?> Function()? restoredUid,
   }) : _db = db,
-       _connectivity = connectivity;
+       _connectivity = connectivity,
+       _currentUid =
+           currentUid ?? (() => FirebaseAuth.instance.currentUser?.uid),
+       _restoredUid =
+           restoredUid ??
+           (() async =>
+               (await FirebaseAuth.instance.authStateChanges().first)?.uid);
 
   Stream<List<int>> get seriesStream => _seriesController.stream;
   Stream<List<int>> get moviesStream => _moviesController.stream;
@@ -42,19 +55,20 @@ class WatchlistRepository {
     _connectivitySub = _connectivity.onConnectivityChanged.listen((connected) {
       if (connected) _flushQueue();
     });
-    unawaited(_syncWithCloudOnStartup());
+    startupSync = _syncWithCloudOnStartup();
+    unawaited(startupSync);
   }
 
   Future<void> _syncWithCloudOnStartup() async {
-    final user = await FirebaseAuth.instance.authStateChanges().first;
-    if (user == null || !await _connectivity.isConnected) return;
+    final uid = await _restoredUid();
+    if (uid == null || !await _connectivity.isConnected) return;
 
     await _flushQueue();
     if (await _queue.hasPending) return;
 
     try {
-      final cloudSeries = await _db.getFollowedSeriesIds(user.uid);
-      final cloudMovies = await _db.getFollowedMoviesIds(user.uid);
+      final cloudSeries = await _db.getFollowedSeriesIds(uid);
+      final cloudMovies = await _db.getFollowedMoviesIds(uid);
 
       final cloudEmpty = cloudSeries.isEmpty && cloudMovies.isEmpty;
       final localEmpty = _seriesIds.isEmpty && _moviesIds.isEmpty;
@@ -110,7 +124,7 @@ class WatchlistRepository {
     }
   }
 
-  String? get _uid => FirebaseAuth.instance.currentUser?.uid;
+  String? get _uid => _currentUid();
 
   Future<void> addSeries(int id) async {
     if (_seriesIds.contains(id)) return;
