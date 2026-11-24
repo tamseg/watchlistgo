@@ -54,7 +54,10 @@ class FirestoreDatabaseService implements DatabaseService {
 
   @override
   Future<List<int>> getFollowedSeriesIds(String uid) async {
-    final docSnap = await _firestore.collection('users').doc(uid).get();
+    final docSnap = await _firestore
+        .collection('users')
+        .doc(uid)
+        .get(const GetOptions(source: Source.server));
     final data = docSnap.data();
     if (data != null && data.containsKey('followedSeriesIds')) {
       return List<int>.from(data['followedSeriesIds']);
@@ -81,7 +84,10 @@ class FirestoreDatabaseService implements DatabaseService {
 
   @override
   Future<List<int>> getFollowedMoviesIds(String uid) async {
-    final docSnap = await _firestore.collection('users').doc(uid).get();
+    final docSnap = await _firestore
+        .collection('users')
+        .doc(uid)
+        .get(const GetOptions(source: Source.server));
     final data = docSnap.data();
     if (data != null && data.containsKey('followedMoviesIds')) {
       return List<int>.from(data['followedMoviesIds']);
@@ -103,21 +109,17 @@ class FirestoreDatabaseService implements DatabaseService {
     }, SetOptions(merge: true));
   }
 
-  Future<void> setFollowedSeriesIds({
+  @override
+  Future<void> addFollowedIds({
     required String uid,
-    required List<int> ids,
+    required List<int> seriesIds,
+    required List<int> movieIds,
   }) async {
     await _firestore.collection('users').doc(uid).set({
-      'followedSeriesIds': ids.isEmpty ? FieldValue.delete() : ids,
-    }, SetOptions(merge: true));
-  }
-
-  Future<void> setFollowedMoviesIds({
-    required String uid,
-    required List<int> ids,
-  }) async {
-    await _firestore.collection('users').doc(uid).set({
-      'followedMoviesIds': ids.isEmpty ? FieldValue.delete() : ids,
+      if (seriesIds.isNotEmpty)
+        'followedSeriesIds': FieldValue.arrayUnion(seriesIds),
+      if (movieIds.isNotEmpty)
+        'followedMoviesIds': FieldValue.arrayUnion(movieIds),
     }, SetOptions(merge: true));
   }
 

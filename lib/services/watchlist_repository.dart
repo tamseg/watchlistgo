@@ -203,39 +203,23 @@ class WatchlistRepository {
       return LinkResult.conflictNeedsConfirmation;
     }
 
-    if (localHasData && cloudHasData) {
-      final mergedSeries = {..._seriesIds, ...cloudSeries}.toList();
-      final mergedMovies = {..._moviesIds, ...cloudMovies}.toList();
-
-      _seriesIds = mergedSeries;
-      _moviesIds = mergedMovies;
-      _seriesController.add(_seriesIds);
-      _moviesController.add(_moviesIds);
-      await _saveLocal();
-
-      await _db.setFollowedSeriesIds(uid: uid, ids: mergedSeries);
-      await _db.setFollowedMoviesIds(uid: uid, ids: mergedMovies);
-
-      await prefs.setString(_lastLinkedUidKey, uid);
-      return LinkResult.merged;
-    }
-
     if (localHasData) {
-      await _db.setFollowedSeriesIds(uid: uid, ids: _seriesIds);
-      await _db.setFollowedMoviesIds(uid: uid, ids: _moviesIds);
+      await _db.addFollowedIds(
+        uid: uid,
+        seriesIds: _seriesIds,
+        movieIds: _moviesIds,
+      );
     }
 
-    if (cloudHasData && !localHasData) {
-      _seriesIds = cloudSeries;
-      _moviesIds = cloudMovies;
-      _seriesController.add(_seriesIds);
-      _moviesController.add(_moviesIds);
-      await _saveLocal();
-    }
+    _seriesIds = {..._seriesIds, ...cloudSeries}.toList();
+    _moviesIds = {..._moviesIds, ...cloudMovies}.toList();
+    _seriesController.add(_seriesIds);
+    _moviesController.add(_moviesIds);
+    await _saveLocal();
 
     await prefs.setString(_lastLinkedUidKey, uid);
     await _flushQueue();
-    return LinkResult.synced;
+    return localHasData && cloudHasData ? LinkResult.merged : LinkResult.synced;
   }
 
   Future<void> confirmReplace(String uid) async {

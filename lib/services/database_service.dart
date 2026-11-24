@@ -28,6 +28,12 @@ abstract class DatabaseService {
 
   Future<void> removeMovie({required String uid, required int movieId});
 
+  Future<void> addFollowedIds({
+    required String uid,
+    required List<int> seriesIds,
+    required List<int> movieIds,
+  });
+
   Future<void> clearWatchlists(String uid);
 
   Future<void> updateMessagingFid({required String uid, required String? fid});
