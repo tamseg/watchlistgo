@@ -1,9 +1,31 @@
 import 'package:material_ui/material_ui.dart';
 
-class ActionMenu extends StatefulWidget {
-  final VoidCallback onRemove;
+class ActionMenuItem {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final bool destructive;
 
-  const ActionMenu({super.key, required this.onRemove});
+  const ActionMenuItem({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.destructive = false,
+  });
+
+  const ActionMenuItem.remove(VoidCallback onTap)
+    : this(
+        icon: Icons.delete_outline,
+        label: 'Remove',
+        onTap: onTap,
+        destructive: true,
+      );
+}
+
+class ActionMenu extends StatefulWidget {
+  final List<ActionMenuItem> items;
+
+  const ActionMenu({super.key, required this.items});
 
   @override
   State<ActionMenu> createState() => _ActionMenuState();
@@ -75,7 +97,7 @@ class _ActionMenuState extends State<ActionMenu>
             ),
           ),
           Positioned(
-            width: 140,
+            width: 200,
             child: CompositedTransformFollower(
               link: _layerLink,
               showWhenUnlinked: false,
@@ -104,34 +126,11 @@ class _ActionMenuState extends State<ActionMenu>
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(12.0),
-                        child: InkWell(
-                          onTap: () {
-                            _closeMenu().then((_) => widget.onRemove());
-                          },
-                          child: const Padding(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 16.0,
-                              vertical: 14.0,
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.delete_outline,
-                                  color: Colors.red,
-                                  size: 20,
-                                ),
-                                SizedBox(width: 12),
-                                Text(
-                                  'Remove',
-                                  style: TextStyle(
-                                    color: Colors.red,
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w400,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            for (final item in widget.items) _buildItem(item),
+                          ],
                         ),
                       ),
                     ),
@@ -141,6 +140,30 @@ class _ActionMenuState extends State<ActionMenu>
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildItem(ActionMenuItem item) {
+    final color = item.destructive ? Colors.red : Colors.grey[850];
+    return InkWell(
+      onTap: () => _closeMenu().then((_) => item.onTap()),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+        child: Row(
+          children: [
+            Icon(item.icon, color: color, size: 20),
+            const SizedBox(width: 12),
+            Text(
+              item.label,
+              style: TextStyle(
+                color: color,
+                fontSize: 15,
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

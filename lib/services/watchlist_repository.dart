@@ -23,7 +23,7 @@ class WatchlistRepository {
   final LibraryStore _store = LibraryStore();
 
   final _seriesController = StreamController<List<int>>.broadcast();
-  final _moviesController = StreamController<List<int>>.broadcast();
+  final _moviesController = StreamController<List<MovieRecord>>.broadcast();
   StreamSubscription<bool>? _connectivitySub;
 
   Map<int, MovieRecord> _movies = {};
@@ -49,17 +49,22 @@ class WatchlistRepository {
        _now = now ?? (() => DateTime.now().toUtc());
 
   Stream<List<int>> get seriesStream => _seriesController.stream;
-  Stream<List<int>> get moviesStream => _moviesController.stream;
+  Stream<List<MovieRecord>> get moviesStream => _moviesController.stream;
 
   List<int> get currentSeriesIds => _activeIds([
     for (final s in _series.values)
       if (!s.removed) (s.tmdbId, s.addedAt),
   ]);
 
-  List<int> get currentMoviesIds => _activeIds([
-    for (final m in _movies.values)
-      if (!m.removed) (m.tmdbId, m.addedAt),
-  ]);
+  List<MovieRecord> get currentMovies => List.unmodifiable(
+    _activeIds([
+      for (final m in _movies.values)
+        if (!m.removed) (m.tmdbId, m.addedAt),
+    ]).map((id) => _movies[id]!),
+  );
+
+  List<int> get currentMoviesIds =>
+      List.unmodifiable(currentMovies.map((m) => m.tmdbId));
 
   static List<int> _activeIds(List<(int, DateTime)> items) {
     items.sort((a, b) {
@@ -138,7 +143,7 @@ class WatchlistRepository {
   }
 
   void _emit() {
-    _moviesController.add(currentMoviesIds);
+    _moviesController.add(currentMovies);
     _seriesController.add(currentSeriesIds);
   }
 
@@ -179,6 +184,18 @@ class WatchlistRepository {
     final existing = _movies[id];
     if (existing == null || existing.removed) return;
     _movies[id] = existing.copyWith(removed: true);
+    await _changed(TitleKind.movie, id);
+  }
+
+  Future<void> setMovieStatus(int id, MovieStatus status) async {
+    final existing = _movies[id];
+    if (existing == null || existing.removed || existing.status == status) {
+      return;
+    }
+    _movies[id] = existing.copyWith(
+      status: status,
+      watchedAt: () => status == MovieStatus.watched ? _now() : null,
+    );
     await _changed(TitleKind.movie, id);
   }
 

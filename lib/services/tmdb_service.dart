@@ -13,6 +13,8 @@ class TMDBService {
     'Content-Type': 'application/json;charset=utf-8',
   };
 
+  static final Map<String, Map<String, dynamic>> _memory = {};
+
   Future<Map<String, dynamic>?> _cachedGet(String url, String cacheKey) async {
     final prefs = await SharedPreferences.getInstance();
 
@@ -20,7 +22,7 @@ class TMDBService {
       final response = await http.get(Uri.parse(url), headers: _headers);
       if (response.statusCode == 200) {
         await prefs.setString(cacheKey, response.body);
-        return json.decode(response.body);
+        return _memory[cacheKey] = json.decode(response.body);
       }
       debugPrint(
         'TMDB API returned status ${response.statusCode} for $cacheKey',
@@ -31,10 +33,13 @@ class TMDBService {
 
     final cached = prefs.getString(cacheKey);
     if (cached != null) {
-      return json.decode(cached);
+      return _memory[cacheKey] = json.decode(cached);
     }
     return null;
   }
+
+  Map<String, dynamic>? peekDetails(String type, int id) =>
+      _memory['tmdb_${type}_$id'];
 
   Future<List<Map<String, dynamic>>> searchMulti(String query) async {
     final response = await http.get(

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:material_ui/material_ui.dart';
+import '../models/tracked_title.dart';
 import '../services/watchlist_repository.dart';
 import '../widgets/floating_nav_bar.dart';
 import '../widgets/movie_card.dart';
@@ -37,25 +38,50 @@ class _HomePageState extends State<HomePage> {
       GlobalKey<SearchPageState>();
 
   List<int> followedSeriesIds = [];
-  List<int> followedMoviesIds = [];
-  late final StreamSubscription<Iterable<int>> _seriesSub;
-  late final StreamSubscription<Iterable<int>> _moviesSub;
+  List<MovieRecord> followedMovies = [];
+  late final StreamSubscription<List<int>> _seriesSub;
+  late final StreamSubscription<List<MovieRecord>> _moviesSub;
+
+  static final _movieViews = [
+    WatchlistView<MovieRecord>(
+      label: 'Watchlist',
+      includes: (m) => m.status == MovieStatus.watchlist,
+      emptyMessage: 'Nothing left to watch.',
+    ),
+    WatchlistView<MovieRecord>(
+      label: 'Watched',
+      includes: (m) => m.status == MovieStatus.watched,
+      emptyMessage: 'No watched movies yet.',
+    ),
+    WatchlistView<MovieRecord>(
+      label: 'All',
+      includes: (_) => true,
+      emptyMessage: 'No movies yet.',
+    ),
+  ];
 
   @override
   void initState() {
     super.initState();
     _pageController = PageController();
 
-    followedSeriesIds = widget.repository.currentSeriesIds.toList();
-    followedMoviesIds = widget.repository.currentMoviesIds.toList();
+    followedSeriesIds = widget.repository.currentSeriesIds;
+    followedMovies = widget.repository.currentMovies;
 
     _seriesSub = widget.repository.seriesStream.listen((ids) {
-      if (mounted) setState(() => followedSeriesIds = ids.toList());
+      if (mounted) setState(() => followedSeriesIds = ids);
     });
-    _moviesSub = widget.repository.moviesStream.listen((ids) {
-      if (mounted) setState(() => followedMoviesIds = ids.toList());
+    _moviesSub = widget.repository.moviesStream.listen((movies) {
+      if (mounted) setState(() => followedMovies = movies);
     });
   }
+
+  void _toggleWatched(MovieRecord movie) => widget.repository.setMovieStatus(
+    movie.tmdbId,
+    movie.status == MovieStatus.watched
+        ? MovieStatus.watchlist
+        : MovieStatus.watched,
+  );
 
   void _addSeries(int id, String? title) =>
       widget.repository.addSeries(id, title: title);
@@ -117,9 +143,9 @@ class _HomePageState extends State<HomePage> {
         onPageChanged: _onPageChanged,
         children: [
           _KeepAlivePage(
-            child: WatchlistPage(
+            child: WatchlistPage<int>(
               title: 'Series',
-              ids: followedSeriesIds,
+              items: followedSeriesIds,
               emptyIcon: Icons.tv,
               emptyLabel: 'series',
               itemBuilder: (id) => SeriesCard(
@@ -130,15 +156,18 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           _KeepAlivePage(
-            child: WatchlistPage(
+            child: WatchlistPage<MovieRecord>(
               title: 'Movies',
-              ids: followedMoviesIds,
+              items: followedMovies,
               emptyIcon: Icons.movie,
               emptyLabel: 'movies',
-              itemBuilder: (id) => MovieCard(
-                key: ValueKey('movie_$id'),
-                movieId: id,
-                onRemove: () => _removeMovie(id),
+              views: _movieViews,
+              itemBuilder: (movie) => MovieCard(
+                key: ValueKey('movie_${movie.tmdbId}'),
+                movieId: movie.tmdbId,
+                watched: movie.status == MovieStatus.watched,
+                onToggleWatched: () => _toggleWatched(movie),
+                onRemove: () => _removeMovie(movie.tmdbId),
               ),
             ),
           ),
@@ -146,7 +175,7 @@ class _HomePageState extends State<HomePage> {
             child: SearchPage(
               key: _searchPageKey,
               followedSeriesIds: followedSeriesIds,
-              followedMoviesIds: followedMoviesIds,
+              followedMoviesIds: [for (final m in followedMovies) m.tmdbId],
               onAddSeries: _addSeries,
               onAddMovie: _addMovie,
             ),

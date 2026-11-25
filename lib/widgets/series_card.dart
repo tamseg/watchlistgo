@@ -33,8 +33,10 @@ class _SeriesCardState extends State<SeriesCard>
     super.build(context);
     return FutureBuilder<Map<String, dynamic>?>(
       future: _seriesData,
+      initialData: _tmdbService.peekDetails('tv', widget.seriesId),
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
+        if (snapshot.connectionState == ConnectionState.waiting &&
+            !snapshot.hasData) {
           return const MediaCard(
             title: 'Loading...',
             subtitleWidget: Center(
@@ -51,7 +53,9 @@ class _SeriesCardState extends State<SeriesCard>
           return MediaCard(
             title: 'Error loading series',
             subtitle: 'Tap to retry',
-            trailing: ActionMenu(onRemove: widget.onRemove),
+            trailing: ActionMenu(
+              items: [ActionMenuItem.remove(widget.onRemove)],
+            ),
           );
         }
 
@@ -103,7 +107,7 @@ class _SeriesCardState extends State<SeriesCard>
           title: seriesTitle,
           subtitleWidget: subtitleWidget,
           posterUrl: posterUrl,
-          trailing: ActionMenu(onRemove: widget.onRemove),
+          trailing: ActionMenu(items: [ActionMenuItem.remove(widget.onRemove)]),
           onTap: () {
             Navigator.push(
               context,

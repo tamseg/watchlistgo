@@ -168,6 +168,43 @@ void main() {
     });
   });
 
+  group('movie status', () {
+    test('marking watched is saved and synced with a watched date', () async {
+      final h = await start();
+      await h.repository.addMovie(10);
+
+      await h.repository.setMovieStatus(10, MovieStatus.watched);
+
+      final local = h.repository.currentMovies.single;
+      expect(local.status, MovieStatus.watched);
+      expect(local.watchedAt, isNotNull);
+      expect(h.db.movieRecords[10]!.status, MovieStatus.watched);
+      expect(h.db.movieRecords[10]!.watchedAt, isNotNull);
+      expect(h.db.movies, [10]);
+    });
+
+    test('marking unwatched clears the watched date', () async {
+      final h = await start();
+      await h.repository.addMovie(10);
+      await h.repository.setMovieStatus(10, MovieStatus.watched);
+
+      await h.repository.setMovieStatus(10, MovieStatus.watchlist);
+
+      expect(h.db.movieRecords[10]!.status, MovieStatus.watchlist);
+      expect(h.db.movieRecords[10]!.watchedAt, isNull);
+    });
+
+    test('ignores removed titles', () async {
+      final h = await start();
+      await h.repository.addMovie(10);
+      await h.repository.removeMovie(10);
+
+      await h.repository.setMovieStatus(10, MovieStatus.watched);
+
+      expect(h.db.movieRecords[10]!.status, MovieStatus.watchlist);
+    });
+  });
+
   group('startup sync', () {
     test('takes cloud records over stale local ones', () async {
       final db = FakeDatabase();
