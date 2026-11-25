@@ -1,14 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:watchlistgo/models/tracked_title.dart';
 import 'package:watchlistgo/services/library_store.dart';
 import 'fakes.dart';
 
-final migrationTime = DateTime.utc(2026, 11, 25, 10);
-
-LibraryStore makeStore() => LibraryStore(now: () => migrationTime);
-
-Future<String?> titleOf(TitleKind kind, int id) async => '${kind.name} $id';
+final someTime = DateTime.utc(2026, 11, 25, 10);
 
 void main() {
   setUp(resetPreferences);
@@ -62,9 +57,9 @@ void main() {
     test('copyWith can clear watchedAt', () {
       final movie = MovieRecord(
         tmdbId: 1,
-        addedAt: migrationTime,
+        addedAt: someTime,
         status: MovieStatus.watched,
-        watchedAt: migrationTime,
+        watchedAt: someTime,
       );
 
       final unwatched = movie.copyWith(
@@ -79,101 +74,23 @@ void main() {
 
   group('store', () {
     test('is empty before anything is saved', () async {
-      final store = makeStore();
+      final store = LibraryStore();
 
       expect(await store.loadMovies(), isEmpty);
       expect(await store.loadSeries(), isEmpty);
     });
 
     test('saves and loads records by TMDB id', () async {
-      final store = makeStore();
+      final store = LibraryStore();
       await store.saveMovies({
-        10: MovieRecord(tmdbId: 10, title: 'A', addedAt: migrationTime),
+        10: MovieRecord(tmdbId: 10, title: 'A', addedAt: someTime),
       });
       await store.saveSeries({
-        20: SeriesRecord(tmdbId: 20, title: 'B', addedAt: migrationTime),
+        20: SeriesRecord(tmdbId: 20, title: 'B', addedAt: someTime),
       });
 
       expect((await store.loadMovies())[10]?.title, 'A');
       expect((await store.loadSeries())[20]?.title, 'B');
-    });
-  });
-
-  group('migration from the old ID lists', () {
-    test('creates a record per id with the right defaults', () async {
-      resetPreferences({
-        'followedMoviesIds': ['10', '11'],
-        'followedSeriesIds': ['20'],
-      });
-      final store = makeStore();
-
-      await store.migrateFromLegacy(titleOf);
-
-      final movies = await store.loadMovies();
-      final series = await store.loadSeries();
-      expect(movies.keys, [10, 11]);
-      expect(movies[10]!.status, MovieStatus.watchlist);
-      expect(movies[10]!.title, 'movie 10');
-      expect(movies[10]!.addedAt, migrationTime);
-      expect(movies[10]!.updatedAt, isNull);
-      expect(movies[10]!.removed, isFalse);
-      expect(series.keys, [20]);
-      expect(series[20]!.status, SeriesStatus.following);
-      expect(series[20]!.title, 'series 20');
-    });
-
-    test('leaves the title empty when it cannot be looked up', () async {
-      resetPreferences({
-        'followedMoviesIds': ['10'],
-      });
-      final store = makeStore();
-
-      await store.migrateFromLegacy((kind, id) async => throw Exception());
-
-      expect((await store.loadMovies())[10]!.title, isNull);
-    });
-
-    test('keeps the old ID lists', () async {
-      resetPreferences({
-        'followedMoviesIds': ['10'],
-      });
-
-      await makeStore().migrateFromLegacy(titleOf);
-
-      final prefs = await SharedPreferences.getInstance();
-      expect(prefs.getStringList('followedMoviesIds'), ['10']);
-    });
-
-    test('does nothing when it already ran', () async {
-      resetPreferences({
-        'followedMoviesIds': ['10'],
-      });
-      final store = makeStore();
-      await store.migrateFromLegacy(titleOf);
-      final movies = await store.loadMovies();
-      await store.saveMovies({
-        ...movies,
-        10: movies[10]!.copyWith(status: MovieStatus.watched),
-      });
-
-      await store.migrateFromLegacy(titleOf);
-
-      expect((await store.loadMovies())[10]!.status, MovieStatus.watched);
-    });
-
-    test('marks a user with no titles as migrated', () async {
-      final store = makeStore();
-      var lookups = 0;
-
-      await store.migrateFromLegacy((kind, id) async {
-        lookups++;
-        return null;
-      });
-
-      final prefs = await SharedPreferences.getInstance();
-      expect(prefs.containsKey('movies_v1'), isTrue);
-      expect(prefs.containsKey('series_v1'), isTrue);
-      expect(lookups, 0);
     });
   });
 }

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_preferences_platform_interface/in_memory_shared_preferences_async.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_async_platform_interface.dart';
+import 'package:watchlistgo/models/tracked_title.dart';
 import 'package:watchlistgo/services/connectivity_service.dart';
 import 'package:watchlistgo/services/database_service.dart';
 
@@ -25,6 +26,10 @@ class FakeDatabase implements DatabaseService {
   bool failReads = false;
   bool failWrites = false;
 
+  final movieRecords = <int, MovieRecord>{};
+  final seriesRecords = <int, SeriesRecord>{};
+  DateTime serverTime = DateTime.utc(2026, 11, 25, 12);
+
   FakeDatabase({List<int>? series, List<int>? movies})
     : series = [...?series],
       movies = [...?movies];
@@ -33,15 +38,43 @@ class FakeDatabase implements DatabaseService {
     if (failWrites) throw Exception('write failed');
   }
 
+  void _checkRead() {
+    if (failReads) throw Exception('read failed');
+  }
+
+  @override
+  Future<Map<int, MovieRecord>> getMovieRecords(String uid) async {
+    _checkRead();
+    return Map.of(movieRecords);
+  }
+
+  @override
+  Future<Map<int, SeriesRecord>> getSeriesRecords(String uid) async {
+    _checkRead();
+    return Map.of(seriesRecords);
+  }
+
+  @override
+  Future<void> putMovieRecord(String uid, MovieRecord record) async {
+    _checkWrite();
+    movieRecords[record.tmdbId] = record.copyWith(updatedAt: serverTime);
+  }
+
+  @override
+  Future<void> putSeriesRecord(String uid, SeriesRecord record) async {
+    _checkWrite();
+    seriesRecords[record.tmdbId] = record.copyWith(updatedAt: serverTime);
+  }
+
   @override
   Future<List<int>> getFollowedSeriesIds(String uid) async {
-    if (failReads) throw Exception('read failed');
+    _checkRead();
     return List.of(staleSeries ?? series);
   }
 
   @override
   Future<List<int>> getFollowedMoviesIds(String uid) async {
-    if (failReads) throw Exception('read failed');
+    _checkRead();
     return List.of(staleMovies ?? movies);
   }
 
@@ -88,6 +121,12 @@ class FakeDatabase implements DatabaseService {
     _checkWrite();
     series = [];
     movies = [];
+    movieRecords.updateAll(
+      (_, r) => r.copyWith(removed: true, updatedAt: serverTime),
+    );
+    seriesRecords.updateAll(
+      (_, r) => r.copyWith(removed: true, updatedAt: serverTime),
+    );
   }
 
   @override

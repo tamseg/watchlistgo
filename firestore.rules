@@ -2,8 +2,26 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    function stampedByServer() {
+      return request.resource.data.updatedAt == request.time;
+    }
+
     match /users/{uid} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
+      allow read, write: if isOwner(uid);
+
+      match /movies/{tmdbId} {
+        allow read, delete: if isOwner(uid);
+        allow create, update: if isOwner(uid) && stampedByServer();
+      }
+
+      match /series/{tmdbId} {
+        allow read, delete: if isOwner(uid);
+        allow create, update: if isOwner(uid) && stampedByServer();
+      }
     }
 
     match /{document=**} {
