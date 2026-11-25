@@ -57,9 +57,11 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  void _addSeries(int id) => widget.repository.addSeries(id);
+  void _addSeries(int id, String? title) =>
+      widget.repository.addSeries(id, title: title);
 
-  void _addMovie(int id) => widget.repository.addMovie(id);
+  void _addMovie(int id, String? title) =>
+      widget.repository.addMovie(id, title: title);
 
   void _removeSeries(int id) => widget.repository.removeSeries(id);
 

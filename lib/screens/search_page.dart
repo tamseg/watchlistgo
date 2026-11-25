@@ -8,8 +8,8 @@ import '../widgets/media_card.dart';
 class SearchPage extends StatefulWidget {
   final List<int> followedSeriesIds;
   final List<int> followedMoviesIds;
-  final void Function(int id) onAddSeries;
-  final void Function(int id) onAddMovie;
+  final void Function(int id, String? title) onAddSeries;
+  final void Function(int id, String? title) onAddMovie;
 
   const SearchPage({
     required this.followedSeriesIds,
@@ -102,20 +102,18 @@ class SearchPageState extends State<SearchPage> {
   void _addItem(Map<String, dynamic> item) {
     final id = item['id'] as int;
     final mediaType = item['media_type'] as String;
-    final title = mediaType == 'tv'
-        ? (item['name'] ?? 'Unknown')
-        : (item['title'] ?? 'Unknown');
+    final title = (mediaType == 'tv' ? item['name'] : item['title']) as String?;
     final typeLabel = mediaType == 'tv' ? 'Series' : 'Movies';
 
     if (mediaType == 'tv') {
-      widget.onAddSeries(id);
+      widget.onAddSeries(id, title);
     } else {
-      widget.onAddMovie(id);
+      widget.onAddMovie(id, title);
     }
 
     setState(() {});
 
-    showCustomSnackBar(context, 'Added "$title" to $typeLabel');
+    showCustomSnackBar(context, 'Added "${title ?? 'Unknown'}" to $typeLabel');
   }
 
   @override

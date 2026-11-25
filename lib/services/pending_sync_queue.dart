@@ -3,20 +3,30 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_preferences_android/shared_preferences_android.dart';
 
-enum SyncOpType { addSeries, removeSeries, addMovie, removeMovie }
+enum TitleKind { movie, series }
 
 class SyncOperation {
-  final SyncOpType type;
+  final TitleKind kind;
   final int id;
 
-  SyncOperation({required this.type, required this.id});
+  const SyncOperation({required this.kind, required this.id});
 
-  Map<String, dynamic> toJson() => {'type': type.name, 'id': id};
+  Map<String, dynamic> toJson() => {'kind': kind.name, 'id': id};
 
-  factory SyncOperation.fromJson(Map<String, dynamic> json) => SyncOperation(
-    type: SyncOpType.values.byName(json['type'] as String),
-    id: json['id'] as int,
-  );
+  factory SyncOperation.fromJson(Map<String, dynamic> json) {
+    final legacyType = json['type'] as String?;
+    final kind = legacyType != null
+        ? (legacyType.endsWith('Series') ? TitleKind.series : TitleKind.movie)
+        : TitleKind.values.byName(json['kind'] as String);
+    return SyncOperation(kind: kind, id: json['id'] as int);
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      other is SyncOperation && other.kind == kind && other.id == id;
+
+  @override
+  int get hashCode => Object.hash(kind, id);
 }
 
 class PendingSyncQueue {
@@ -50,27 +60,35 @@ class PendingSyncQueue {
     await legacy.remove(_queueKey);
   }
 
-  Future<void> enqueue(SyncOperation op) async {
+  Future<List<SyncOperation>> _read() async {
     await _migrateLegacyQueue();
-    final existing = await _prefs.getStringList(_queueKey) ?? [];
-    existing.add(jsonEncode(op.toJson()));
-    await _prefs.setStringList(_queueKey, existing);
+    final raw = await _prefs.getStringList(_queueKey) ?? [];
+    return {
+      for (final e in raw)
+        SyncOperation.fromJson(jsonDecode(e) as Map<String, dynamic>),
+    }.toList();
   }
+
+  Future<void> enqueue(SyncOperation op) async {
+    final ops = await _read();
+    if (ops.contains(op)) return;
+    await _prefs.setStringList(_queueKey, [
+      for (final o in [...ops, op]) jsonEncode(o.toJson()),
+    ]);
+  }
+
+  Future<List<SyncOperation>> peekAll() => _read();
 
   Future<List<SyncOperation>> dequeueAll() async {
-    await _migrateLegacyQueue();
-    final raw = await _prefs.getStringList(_queueKey) ?? [];
+    final ops = await _read();
     await _prefs.remove(_queueKey);
-    return raw
-        .map(
-          (e) => SyncOperation.fromJson(jsonDecode(e) as Map<String, dynamic>),
-        )
-        .toList();
+    return ops;
   }
 
-  Future<bool> get hasPending async {
+  Future<void> clear() async {
     await _migrateLegacyQueue();
-    final raw = await _prefs.getStringList(_queueKey) ?? [];
-    return raw.isNotEmpty;
+    await _prefs.remove(_queueKey);
   }
+
+  Future<bool> get hasPending async => (await _read()).isNotEmpty;
 }
