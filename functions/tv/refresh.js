@@ -1,6 +1,7 @@
 const { FieldValue } = require('firebase-admin/firestore');
 const { tvmaze } = require('./providers');
 const { resolveSeries } = require('./resolve');
+const { followerFids, sendPush } = require('./push');
 const {
   deriveSeriesInfo,
   summarizeAnilist,
@@ -25,7 +26,7 @@ function anilistDue(prev, now) {
 function refreshDue(prev, updatedIds, now) {
   if (!prev) return true;
   const today = now.toISOString().slice(0, 10);
-  if (prev.mappingWarning) return true;
+  if (prev.mappingWarning || !('backdropPath' in prev)) return true;
   if (prev.tvmazeIds?.some(id => updatedIds.has(String(id)))) return true;
   if (prev.next?.precision === 'day' && prev.next.date <= today) return true;
   return olderThan(prev.refreshedAt, FULL_REFRESH_AGE, now);
@@ -95,11 +96,13 @@ async function refreshSeries({
         now,
       });
 
+      const backdropPath = resolved.details.backdrop_path ?? null;
       for (const body of diffNotifications(prev, info))
-        notifications.push({ tmdbId, title: info.name, body });
+        notifications.push({ tmdbId, title: info.name, body, backdropPath });
 
       await ref.set({
         ...info,
+        backdropPath,
         mappedBy: resolved.mappedBy ?? null,
         anime: resolved.anime,
         anilist,
@@ -126,8 +129,28 @@ async function refreshSeries({
   }
 
   log(`Refreshed ${refreshed} of ${ids.length} followed series.`);
-  for (const n of notifications)
-    log(`${dryRun ? '[dry run] ' : ''}${n.title}: ${n.body}`);
+  for (const n of notifications) {
+    if (dryRun) {
+      log(`[dry run] ${n.title}: ${n.body}`);
+      continue;
+    }
+    try {
+      const fids = await followerFids(db, 'series', n.tmdbId);
+      if (fids.length) {
+        await sendPush({
+          fids,
+          title: `📺 ${n.title}`,
+          body: n.body,
+          type: 'tv',
+          id: n.tmdbId,
+          imagePath: n.backdropPath,
+        });
+      }
+      log(`${n.title}: ${n.body} (${fids.length})`);
+    } catch (e) {
+      log(`Failed to notify ${n.title}: ${e.message}`);
+    }
+  }
   return notifications;
 }
 

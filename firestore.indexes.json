@@ -1,9 +1,42 @@
 {
-  "indexes": [],
+  "indexes": [
+    {
+      "collectionGroup": "episodeReleases",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "notified", "order": "ASCENDING" },
+        { "fieldPath": "airstamp", "order": "ASCENDING" }
+      ]
+    }
+  ],
   "fieldOverrides": [
     {
       "collectionGroup": "series",
       "fieldPath": "removed",
+      "indexes": [
+        { "order": "ASCENDING", "queryScope": "COLLECTION" },
+        { "order": "ASCENDING", "queryScope": "COLLECTION_GROUP" }
+      ]
+    },
+    {
+      "collectionGroup": "series",
+      "fieldPath": "tmdbId",
+      "indexes": [
+        { "order": "ASCENDING", "queryScope": "COLLECTION" },
+        { "order": "ASCENDING", "queryScope": "COLLECTION_GROUP" }
+      ]
+    },
+    {
+      "collectionGroup": "movies",
+      "fieldPath": "removed",
+      "indexes": [
+        { "order": "ASCENDING", "queryScope": "COLLECTION" },
+        { "order": "ASCENDING", "queryScope": "COLLECTION_GROUP" }
+      ]
+    },
+    {
+      "collectionGroup": "movies",
+      "fieldPath": "tmdbId",
       "indexes": [
         { "order": "ASCENDING", "queryScope": "COLLECTION" },
         { "order": "ASCENDING", "queryScope": "COLLECTION_GROUP" }

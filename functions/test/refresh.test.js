@@ -4,7 +4,12 @@ const { refreshDue, anilistDue } = require('../tv/refresh');
 
 const now = new Date('2026-11-26T12:00:00Z');
 const recent = new Date('2026-11-26T10:00:00Z');
-const fresh = { tvmazeIds: [1], refreshedAt: recent, next: null };
+const fresh = {
+  tvmazeIds: [1],
+  refreshedAt: recent,
+  next: null,
+  backdropPath: '/b.jpg',
+};
 const none = new Set();
 
 test('a show seen for the first time is due', () => {
@@ -17,6 +22,11 @@ test('an unchanged, recently refreshed show is skipped', () => {
 
 test('a show TVmaze reports as updated is due', () => {
   assert.equal(refreshDue(fresh, new Set(['1']), now), true);
+});
+
+test('a show saved before backdrops were stored is due', () => {
+  const { backdropPath, ...old } = fresh;
+  assert.equal(refreshDue(old, none, now), true);
 });
 
 test('a show with a mapping warning is retried every run', () => {
