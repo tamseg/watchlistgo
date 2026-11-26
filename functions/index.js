@@ -9,6 +9,7 @@ const { releaseEpisodes } = require('./tv/release');
 const { followChanged, updateFollowerCount } = require('./tv/followers');
 const { takeQuota } = require('./tv/quota');
 const { notifyMovieReleases } = require('./movies');
+const { proxyTmdb } = require('./tmdb');
 
 initializeApp();
 
@@ -52,6 +53,14 @@ exports.requestSeries = onCall(
       db: getFirestore(),
       tmdbIds: request.data?.tmdbIds,
     });
+  },
+);
+
+exports.tmdb = onCall(
+  { region: 'me-west1', timeoutSeconds: 30, memory: '256MiB' },
+  async request => {
+    if (!request.app) console.warn('tmdb called without App Check');
+    return proxyTmdb(request.data);
   },
 );
 
