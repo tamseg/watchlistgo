@@ -64,7 +64,7 @@ async function releaseEpisodes({ db, now = new Date(), log = console.log }) {
   if (!done.length) return;
   const batch = db.batch();
   for (const id of done) {
-    batch.update(db.doc(`episodeReleases/${id}`), { notified: true });
+    batch.delete(db.doc(`episodeReleases/${id}`));
   }
   await batch.commit();
 }
