@@ -1,4 +1,7 @@
 import 'package:material_ui/material_ui.dart';
+import '../models/series_info.dart';
+import '../models/series_status.dart';
+import '../services/series_info_service.dart';
 import '../services/tmdb_service.dart';
 import '../screens/series_detail_page.dart';
 import 'media_card.dart';
@@ -17,20 +20,47 @@ class SeriesCard extends StatefulWidget {
 class _SeriesCardState extends State<SeriesCard>
     with AutomaticKeepAliveClientMixin {
   late Future<Map<String, dynamic>?> _seriesData;
+  late Stream<SeriesInfo?> _seriesInfo;
   final TMDBService _tmdbService = TMDBService();
 
   @override
   void initState() {
     super.initState();
     _seriesData = _tmdbService.getDetails('tv', widget.seriesId);
+    _seriesInfo = SeriesInfoService().watch(widget.seriesId);
   }
 
   @override
   bool get wantKeepAlive => true;
 
+  Widget _statusLines(StatusLine line, TextTheme theme) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Text(
+        line.label,
+        style: theme.labelMedium,
+        overflow: TextOverflow.ellipsis,
+      ),
+      Text(
+        line.value,
+        style: theme.bodyMedium,
+        overflow: TextOverflow.ellipsis,
+      ),
+    ],
+  );
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    return StreamBuilder<SeriesInfo?>(
+      stream: _seriesInfo,
+      builder: (context, infoSnapshot) =>
+          _buildCard(context, infoSnapshot.data),
+    );
+  }
+
+  Widget _buildCard(BuildContext context, SeriesInfo? info) {
     return FutureBuilder<Map<String, dynamic>?>(
       future: _seriesData,
       initialData: _tmdbService.peekDetails('tv', widget.seriesId),
@@ -72,7 +102,12 @@ class _SeriesCardState extends State<SeriesCard>
         Widget subtitleWidget;
         final theme = Theme.of(context).textTheme;
 
-        if (nextEpisode != null) {
+        if (info != null) {
+          subtitleWidget = _statusLines(
+            seriesStatusLine(info, seriesTitle),
+            theme,
+          );
+        } else if (nextEpisode != null) {
           final s = nextEpisode['season_number'];
           final e = nextEpisode['episode_number'];
           final date = nextEpisode['air_date'];

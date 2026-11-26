@@ -2,6 +2,9 @@ import 'package:material_ui/material_ui.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../theme/app_theme.dart';
+import '../models/series_info.dart';
+import '../models/series_status.dart';
+import '../services/series_info_service.dart';
 import '../services/tmdb_service.dart';
 import '../widgets/logo_widget.dart';
 
@@ -16,6 +19,7 @@ class SeriesDetailPage extends StatefulWidget {
 class _SeriesDetailPageState extends State<SeriesDetailPage> {
   late Future<Map<String, dynamic>?> _seriesData;
   late Future<Map<String, dynamic>?> _seriesImages;
+  late Stream<SeriesInfo?> _seriesInfo;
   final TMDBService _tmdbService = TMDBService();
 
   @override
@@ -23,6 +27,7 @@ class _SeriesDetailPageState extends State<SeriesDetailPage> {
     super.initState();
     _seriesData = _tmdbService.getDetails('tv', widget.seriesId);
     _seriesImages = _tmdbService.getImages('tv', widget.seriesId);
+    _seriesInfo = SeriesInfoService().watch(widget.seriesId);
   }
 
   @override
@@ -71,9 +76,6 @@ class _SeriesDetailPageState extends State<SeriesDetailPage> {
 
             final rating = data['vote_average']?.toStringAsFixed(1) ?? 'N/A';
             final firstAirDate = data['first_air_date'] ?? 'N/A';
-            final status = data['status'] ?? 'N/A';
-            final seasons = data['number_of_seasons']?.toString() ?? 'N/A';
-            final episodes = data['number_of_episodes']?.toString() ?? 'N/A';
             final genres =
                 (data['genres'] as List?)?.map((g) => g['name']).join(', ') ??
                 'N/A';
@@ -108,14 +110,11 @@ class _SeriesDetailPageState extends State<SeriesDetailPage> {
                           ],
                         ),
                         const SizedBox(height: 12),
-                        Text(
-                          'Status: $status | Seasons: $seasons ($episodes episodes)',
-                          style: const TextStyle(
-                            color: AppTheme.secondaryTextColor,
-                          ),
+                        StreamBuilder<SeriesInfo?>(
+                          stream: _seriesInfo,
+                          builder: (context, info) =>
+                              _buildStatus(data, info.data),
                         ),
-                        const SizedBox(height: 8),
-                        _buildEpisodeBadge(data),
                         const SizedBox(height: 12),
                         Text(
                           'Genres: $genres',
@@ -215,12 +214,54 @@ class _SeriesDetailPageState extends State<SeriesDetailPage> {
     );
   }
 
-  Widget _buildEpisodeBadge(Map<String, dynamic> data) {
-    if (data['next_episode_to_air'] == null &&
-        data['last_episode_to_air'] == null) {
-      return const SizedBox.shrink();
+  Widget _buildStatus(Map<String, dynamic> data, SeriesInfo? info) {
+    final String summary;
+    final List<String> badges;
+    if (info != null) {
+      final name = data['name'] as String? ?? '';
+      final line = seriesStatusLine(info, name, detailed: true);
+      final film = filmLine(info, name);
+      summary =
+          'Status: ${seriesStateName(info.state)} | '
+          'Seasons: ${info.releasedSeasons} '
+          '(${info.releasedEpisodes} episodes)';
+      badges = [
+        for (final l in {line, ?film}) '${l.label} · ${l.value}',
+      ];
+    } else {
+      summary =
+          'Status: ${data['status'] ?? 'N/A'} | '
+          'Seasons: ${data['number_of_seasons'] ?? 'N/A'} '
+          '(${data['number_of_episodes'] ?? 'N/A'} episodes)';
+      final badge = _tmdbEpisodeText(data);
+      badges = [?badge];
     }
 
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          summary,
+          style: const TextStyle(color: AppTheme.secondaryTextColor),
+        ),
+        for (final text in badges) ...[
+          const SizedBox(height: 8),
+          _buildBadge(text),
+        ],
+      ],
+    );
+  }
+
+  String? _tmdbEpisodeText(Map<String, dynamic> data) {
+    final next = data['next_episode_to_air'];
+    final last = data['last_episode_to_air'];
+    final episode = next ?? last;
+    if (episode == null) return null;
+    final code = 'S${episode['season_number']}E${episode['episode_number']}';
+    return '${next != null ? 'Next' : 'Last'}: $code - ${episode['air_date']}';
+  }
+
+  Widget _buildBadge(String text) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
@@ -235,13 +276,13 @@ class _SeriesDetailPageState extends State<SeriesDetailPage> {
         children: [
           const Icon(Icons.event, color: AppTheme.episodeBadgeColor, size: 18),
           const SizedBox(width: 8),
-          Text(
-            data['next_episode_to_air'] != null
-                ? 'Next: S${data['next_episode_to_air']['season_number']}E${data['next_episode_to_air']['episode_number']} - ${data['next_episode_to_air']['air_date']}'
-                : 'Last: S${data['last_episode_to_air']['season_number']}E${data['last_episode_to_air']['episode_number']} - ${data['last_episode_to_air']['air_date']}',
-            style: const TextStyle(
-              color: AppTheme.episodeBadgeColor,
-              fontWeight: FontWeight.bold,
+          Flexible(
+            child: Text(
+              text,
+              style: const TextStyle(
+                color: AppTheme.episodeBadgeColor,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],
