@@ -23,7 +23,6 @@ dependencies:
   connectivity_plus: ^7.0.0
   firebase_messaging: 17.1.0
   flutter_local_notifications: ^20.1.0
-  flutter_dotenv: ^6.0.0
   flutter_cache_manager: ^3.4.1
   custom_pop_up_menu: ^1.2.4
   flutter_svg: ^2.2.4
@@ -47,7 +46,6 @@ flutter:
   assets:
     - assets/app_icon.webp
     - assets/arrow_left.svg
-    - .env
 
 flutter_launcher_icons:
   android: "ic_launcher"
