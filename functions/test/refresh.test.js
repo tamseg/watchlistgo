@@ -17,6 +17,17 @@ test('removing or keeping a show does not resolve it', async () => {
   assert.equal(await call(following, following), false);
 });
 
+test('a new show is not resolved once the hourly cap is used up', async () => {
+  const resolved = await resolveNewFollow({
+    db: dbWithInfo(false),
+    tmdbId: 1,
+    before: undefined,
+    after: { removed: false },
+    allowed: async () => false,
+  });
+  assert.equal(resolved, false);
+});
+
 test('a new follow of a known show is not resolved again', async () => {
   const resolved = await resolveNewFollow({
     db: dbWithInfo(true),

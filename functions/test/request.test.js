@@ -1,6 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { validIds, grantQuota, HOURLY_NEW_SHOWS } = require('../tv/request');
+const { validIds } = require('../tv/request');
+const { grantQuota, HOURLY_NEW_SHOWS } = require('../tv/quota');
 
 const now = new Date('2026-11-26T12:30:00Z');
 const thisHour = Math.floor(now.getTime() / 3600000);

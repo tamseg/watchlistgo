@@ -7,6 +7,7 @@ const { requestSeries } = require('./tv/request');
 const { refreshSeries, resolveNewFollow } = require('./tv/refresh');
 const { releaseEpisodes } = require('./tv/release');
 const { followChanged, updateFollowerCount } = require('./tv/followers');
+const { takeQuota } = require('./tv/quota');
 const { notifyMovieReleases } = require('./movies');
 
 initializeApp();
@@ -38,7 +39,8 @@ exports.resolveFollowedSeries = onDocumentWritten(
     const before = event.data?.before?.data();
     const after = event.data?.after?.data();
     if (followChanged(before, after)) await updateFollowerCount(db, tmdbId);
-    await resolveNewFollow({ db, tmdbId, before, after });
+    const allowed = async () => (await takeQuota(db, 1)) > 0;
+    await resolveNewFollow({ db, tmdbId, before, after, allowed });
   },
 );
 

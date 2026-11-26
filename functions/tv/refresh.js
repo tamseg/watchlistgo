@@ -3,6 +3,7 @@ const { tvmaze } = require('./providers');
 const { resolveSeries } = require('./resolve');
 const { followerFids, sendPush } = require('./push');
 const { isFollowing, followedSeriesIds } = require('./followers');
+const { takeQuota } = require('./quota');
 const {
   deriveSeriesInfo,
   summarizeAnilist,
@@ -107,10 +108,18 @@ async function refreshShow({ db, tmdbId, prev, withAnilist, now }) {
   }));
 }
 
-async function resolveNewFollow({ db, tmdbId, before, after, now }) {
+async function resolveNewFollow({
+  db,
+  tmdbId,
+  before,
+  after,
+  now,
+  allowed = async () => true,
+}) {
   if (!isFollowing(after) || isFollowing(before)) return false;
   const ref = db.doc(`seriesInfo/${tmdbId}`);
   if ((await ref.get()).exists) return false;
+  if (!(await allowed())) return false;
   const at = now ?? new Date();
   await refreshShow({
     db,
@@ -149,6 +158,7 @@ async function refreshSeries({
       const prev = (await ref.get()).data();
       const withAnilist = anilistDue(prev, now);
       if (!withAnilist && !refreshDue(prev, updatedIds, now)) continue;
+      if (!prev && !(await takeQuota(db, 1, now))) continue;
       notifications.push(
         ...(await refreshShow({ db, tmdbId, prev, withAnilist, now })),
       );

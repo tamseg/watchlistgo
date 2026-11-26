@@ -1,7 +1,7 @@
 const { resolveNewFollow } = require('./refresh');
+const { takeQuota } = require('./quota');
 
 const HOUR = 3600 * 1000;
-const HOURLY_NEW_SHOWS = 200;
 const MAX_IDS = 500;
 const MAX_NEW_PER_CALL = 10;
 const REQUEST_REFRESH_AGE = 20 * HOUR;
@@ -10,26 +10,6 @@ function validIds(value) {
   if (!Array.isArray(value)) return [];
   const ids = value.filter(id => Number.isInteger(id) && id > 0);
   return [...new Set(ids)].slice(0, MAX_IDS);
-}
-
-function grantQuota(stored, wanted, now) {
-  const hour = Math.floor(now.getTime() / HOUR);
-  const used = stored?.hour === hour ? stored.count : 0;
-  const granted = Math.max(0, Math.min(wanted, HOURLY_NEW_SHOWS - used));
-  return { granted, quota: { hour, count: used + granted } };
-}
-
-async function takeQuota(db, wanted, now) {
-  const ref = db.doc('limits/newSeries');
-  return db.runTransaction(async tx => {
-    const { granted, quota } = grantQuota(
-      (await tx.get(ref)).data(),
-      wanted,
-      now,
-    );
-    tx.set(ref, quota);
-    return granted;
-  });
 }
 
 async function requestSeries({
@@ -47,7 +27,7 @@ async function requestSeries({
   );
   const batch = db.batch();
   let touched = 0;
-  ids.forEach((id, i) => {
+  ids.forEach((_, i) => {
     const last = requests[i].get('requestedAt')?.toDate();
     if (last && now - last < REQUEST_REFRESH_AGE) return;
     batch.set(requests[i].ref, { requestedAt: now });
@@ -70,4 +50,4 @@ async function requestSeries({
   return { resolved, deferred: missing.length - resolved };
 }
 
-module.exports = { requestSeries, validIds, grantQuota, HOURLY_NEW_SHOWS };
+module.exports = { requestSeries, validIds };
