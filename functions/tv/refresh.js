@@ -12,6 +12,7 @@ const {
 const HOUR = 3600 * 1000;
 const FULL_REFRESH_AGE = 7 * 24 * HOUR;
 const ANILIST_REFRESH_AGE = 20 * HOUR;
+const REQUESTED_FOR = 30 * 24 * HOUR;
 
 const toDate = value => (value?.toDate ? value.toDate() : (value ?? null));
 const olderThan = (value, ms, now) => !value || now - toDate(value) > ms;
@@ -40,6 +41,15 @@ async function followedSeriesIds(db) {
   return [
     ...new Set(snap.docs.map(doc => Number(doc.get('tmdbId') ?? doc.id))),
   ];
+}
+
+async function requestedSeriesIds(db, now) {
+  const since = new Date(now.getTime() - REQUESTED_FOR);
+  const snap = await db
+    .collection('seriesRequests')
+    .where('requestedAt', '>=', since)
+    .get();
+  return snap.docs.map(doc => Number(doc.id));
 }
 
 async function saveReleases(db, releases) {
@@ -133,7 +143,12 @@ async function refreshSeries({
   dryRun = true,
   log = console.log,
 }) {
-  const ids = await followedSeriesIds(db);
+  const ids = [
+    ...new Set([
+      ...(await followedSeriesIds(db)),
+      ...(await requestedSeriesIds(db, now)),
+    ]),
+  ];
   const updates = (await tvmaze('/updates/shows?since=day')) ?? {};
   const updatedIds = new Set(Object.keys(updates));
   const notifications = [];

@@ -25,7 +25,7 @@ service cloud.firestore {
     }
 
     match /seriesInfo/{tmdbId} {
-      allow read: if request.auth != null;
+      allow read: if true;
     }
 
     match /{document=**} {
