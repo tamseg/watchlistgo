@@ -25,20 +25,7 @@ class FirebaseAuthService implements AuthService {
       idToken: googleAuth.idToken,
     );
 
-    final userCredential = await _firebaseAuth.signInWithCredential(credential);
-
-    if (userCredential.additionalUserInfo?.isNewUser ?? false) {
-      if (userCredential.user != null) {
-        await _databaseService.createUser(
-          uid: userCredential.user!.uid,
-          email: userCredential.user!.email ?? '',
-          displayName: userCredential.user!.displayName,
-          photoUrl: userCredential.user!.photoURL,
-        );
-      }
-    }
-
-    return userCredential;
+    return _firebaseAuth.signInWithCredential(credential);
   }
 
   @override

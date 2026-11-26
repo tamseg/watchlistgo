@@ -128,7 +128,7 @@ void main() {
   });
 
   group('local changes', () {
-    test('are written as records and to the old lists', () async {
+    test('are written as records', () async {
       final h = await start();
 
       await h.repository.addMovie(10, title: 'Dune');
@@ -137,11 +137,9 @@ void main() {
       expect(h.db.movieRecords[10]!.title, 'Dune');
       expect(h.db.movieRecords[10]!.removed, isFalse);
       expect(h.db.seriesRecords[20]!.title, 'Fallout');
-      expect(h.db.movies, [10]);
-      expect(h.db.series, [20]);
     });
 
-    test('removals become markers and leave the old lists', () async {
+    test('removals become markers', () async {
       final h = await start();
       await h.repository.addMovie(10);
 
@@ -149,7 +147,6 @@ void main() {
 
       expect(h.repository.currentMoviesIds, isEmpty);
       expect(h.db.movieRecords[10]!.removed, isTrue);
-      expect(h.db.movies, isEmpty);
     });
 
     test('keep the order titles were added in', () async {
@@ -197,7 +194,6 @@ void main() {
       network.setConnected(true);
       await settle();
       expect(h.db.seriesRecords.keys, [1]);
-      expect(h.db.series, [1]);
     });
 
     test('are queued when a cloud write fails', () async {
@@ -227,7 +223,6 @@ void main() {
       expect(local.watchedAt, isNotNull);
       expect(h.db.movieRecords[10]!.status, MovieStatus.watched);
       expect(h.db.movieRecords[10]!.watchedAt, isNotNull);
-      expect(h.db.movies, [10]);
     });
 
     test('marking unwatched clears the watched date', () async {
@@ -276,7 +271,6 @@ void main() {
       final h = await start(localMovies: [movie(1)]);
 
       expect(h.db.movieRecords.keys, [1]);
-      expect(h.db.movies, [1]);
     });
 
     test('keeps a local edit that is still waiting to be sent', () async {
@@ -444,7 +438,5 @@ void main() {
     expect(h.repository.currentSeriesIds, isEmpty);
     expect(h.db.movieRecords[1]!.removed, isTrue);
     expect(h.db.seriesRecords[2]!.removed, isTrue);
-    expect(h.db.movies, isEmpty);
-    expect(h.db.series, isEmpty);
   });
 }

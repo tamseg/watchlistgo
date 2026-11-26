@@ -10,17 +10,56 @@ service cloud.firestore {
       return request.resource.data.updatedAt == request.time;
     }
 
+    function validWatchedAt(data) {
+      return !('watchedAt' in data) || data.watchedAt == null
+        || data.watchedAt is timestamp;
+    }
+
+    function validFid(data) {
+      return !('fid' in data) || (data.fid is string && data.fid.size() < 512);
+    }
+
+    function validTitle(tmdbId, fields, statuses) {
+      let data = request.resource.data;
+      return data.keys().hasOnly(fields)
+        && data.tmdbId is int
+        && string(data.tmdbId) == tmdbId
+        && data.status in statuses
+        && data.removed is bool
+        && (!('title' in data) || data.title == null
+          || (data.title is string && data.title.size() < 512))
+        && data.addedAt is timestamp
+        && stampedByServer();
+    }
+
     match /users/{uid} {
-      allow read, write: if isOwner(uid);
+      allow read, delete: if isOwner(uid);
+      allow create: if isOwner(uid)
+        && request.resource.data.keys().hasOnly(['fid'])
+        && validFid(request.resource.data);
+      allow update: if isOwner(uid)
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['fid'])
+        && validFid(request.resource.data);
 
       match /movies/{tmdbId} {
         allow read, delete: if isOwner(uid);
-        allow create, update: if isOwner(uid) && stampedByServer();
+        allow create, update: if isOwner(uid)
+          && validTitle(
+            tmdbId,
+            ['tmdbId', 'title', 'status', 'removed', 'addedAt', 'watchedAt',
+              'updatedAt'],
+            ['watchlist', 'watched'])
+          && validWatchedAt(request.resource.data);
       }
 
       match /series/{tmdbId} {
         allow read, delete: if isOwner(uid);
-        allow create, update: if isOwner(uid) && stampedByServer();
+        allow create, update: if isOwner(uid)
+          && validTitle(
+            tmdbId,
+            ['tmdbId', 'title', 'status', 'removed', 'addedAt', 'updatedAt'],
+            ['following']);
       }
     }
 

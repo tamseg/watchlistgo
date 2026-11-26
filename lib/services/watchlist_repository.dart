@@ -239,20 +239,10 @@ class WatchlistRepository {
         final movie = _movies[id];
         if (movie == null) return;
         await _db.putMovieRecord(uid, movie);
-        if (movie.removed) {
-          await _db.removeMovie(uid: uid, movieId: id);
-        } else {
-          await _db.addMovie(uid: uid, movieId: id);
-        }
       case TitleKind.series:
         final series = _series[id];
         if (series == null) return;
         await _db.putSeriesRecord(uid, series);
-        if (series.removed) {
-          await _db.removeSeries(uid: uid, seriesId: id);
-        } else {
-          await _db.addSeries(uid: uid, seriesId: id);
-        }
     }
   }
 

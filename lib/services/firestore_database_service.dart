@@ -62,49 +62,6 @@ class FirestoreDatabaseService implements DatabaseService {
       });
 
   @override
-  Future<void> createUser({
-    required String uid,
-    required String email,
-    String? displayName,
-    String? photoUrl,
-  }) async {
-    final docRef = _firestore.collection('users').doc(uid);
-    final docSnap = await docRef.get();
-
-    if (!docSnap.exists) {
-      final now = FieldValue.serverTimestamp();
-      await docRef.set({
-        'email': email,
-        'displayName': displayName,
-        'photoUrl': photoUrl,
-        'createdAt': now,
-        'updatedAt': now,
-      });
-    }
-  }
-
-  @override
-  Future<Map<String, dynamic>?> getUser(String uid) async {
-    final docSnap = await _firestore.collection('users').doc(uid).get();
-    return docSnap.data();
-  }
-
-  @override
-  Future<void> updateUser({
-    required String uid,
-    String? displayName,
-    String? photoUrl,
-  }) async {
-    final updates = <String, dynamic>{
-      'updatedAt': FieldValue.serverTimestamp(),
-    };
-    if (displayName != null) updates['displayName'] = displayName;
-    if (photoUrl != null) updates['photoUrl'] = photoUrl;
-
-    await _firestore.collection('users').doc(uid).update(updates);
-  }
-
-  @override
   Future<void> deleteUser(String uid) async {
     for (final collection in [_movies(uid), _series(uid)]) {
       await _inBatches(
@@ -116,85 +73,13 @@ class FirestoreDatabaseService implements DatabaseService {
   }
 
   @override
-  Future<List<int>> getFollowedSeriesIds(String uid) async {
-    final docSnap = await _firestore
-        .collection('users')
-        .doc(uid)
-        .get(const GetOptions(source: Source.server));
-    final data = docSnap.data();
-    if (data != null && data.containsKey('followedSeriesIds')) {
-      return List<int>.from(data['followedSeriesIds']);
-    }
-    return [];
-  }
-
-  @override
-  Future<void> addSeries({required String uid, required int seriesId}) async {
-    await _firestore.collection('users').doc(uid).set({
-      'followedSeriesIds': FieldValue.arrayUnion([seriesId]),
-    }, SetOptions(merge: true));
-  }
-
-  @override
-  Future<void> removeSeries({
-    required String uid,
-    required int seriesId,
-  }) async {
-    await _firestore.collection('users').doc(uid).set({
-      'followedSeriesIds': FieldValue.arrayRemove([seriesId]),
-    }, SetOptions(merge: true));
-  }
-
-  @override
-  Future<List<int>> getFollowedMoviesIds(String uid) async {
-    final docSnap = await _firestore
-        .collection('users')
-        .doc(uid)
-        .get(const GetOptions(source: Source.server));
-    final data = docSnap.data();
-    if (data != null && data.containsKey('followedMoviesIds')) {
-      return List<int>.from(data['followedMoviesIds']);
-    }
-    return [];
-  }
-
-  @override
-  Future<void> addMovie({required String uid, required int movieId}) async {
-    await _firestore.collection('users').doc(uid).set({
-      'followedMoviesIds': FieldValue.arrayUnion([movieId]),
-    }, SetOptions(merge: true));
-  }
-
-  @override
-  Future<void> removeMovie({required String uid, required int movieId}) async {
-    await _firestore.collection('users').doc(uid).set({
-      'followedMoviesIds': FieldValue.arrayRemove([movieId]),
-    }, SetOptions(merge: true));
-  }
-
-  @override
-  Future<void> addFollowedIds({
-    required String uid,
-    required List<int> seriesIds,
-    required List<int> movieIds,
-  }) async {
-    await _firestore.collection('users').doc(uid).set({
-      if (seriesIds.isNotEmpty)
-        'followedSeriesIds': FieldValue.arrayUnion(seriesIds),
-      if (movieIds.isNotEmpty)
-        'followedMoviesIds': FieldValue.arrayUnion(movieIds),
-    }, SetOptions(merge: true));
-  }
-
-  @override
   Future<void> updateMessagingFid({
     required String uid,
     required String? fid,
   }) async {
-    await _firestore.collection('users').doc(uid).set({
-      'fid': fid ?? FieldValue.delete(),
-      'fcmToken': FieldValue.delete(),
-    }, SetOptions(merge: true));
+    await _user(
+      uid,
+    ).set({'fid': fid ?? FieldValue.delete()}, SetOptions(merge: true));
   }
 
   @override
@@ -210,15 +95,6 @@ class FirestoreDatabaseService implements DatabaseService {
           'updatedAt': FieldValue.serverTimestamp(),
         }),
       );
-    }
-
-    final docRef = _user(uid);
-    final docSnap = await docRef.get();
-    if (docSnap.exists) {
-      await docRef.update({
-        'followedSeriesIds': FieldValue.delete(),
-        'followedMoviesIds': FieldValue.delete(),
-      });
     }
   }
 }
