@@ -11,7 +11,7 @@ function fuzzyDate(d) {
   return { date: `${d.year}-${pad(d.month)}-${pad(d.day)}`, precision: 'day' };
 }
 
-const mediaTitle = m => m.title?.english ?? null;
+const mediaTitle = m => m.title?.english ?? m.title?.romaji ?? null;
 
 function tmdbReleasedEpisodes(details) {
   const last = details.last_episode_to_air;
@@ -32,7 +32,11 @@ function summarizeAnilist(nodes) {
       ? { title: mediaTitle(season), ...fuzzyDate(season.startDate) }
       : null,
     film: film
-      ? { title: mediaTitle(film), ...fuzzyDate(film.startDate) }
+      ? {
+          id: `anilist:${film.id}`,
+          title: mediaTitle(film),
+          ...fuzzyDate(film.startDate),
+        }
       : null,
   };
 }
@@ -85,6 +89,11 @@ function deriveSeriesInfo({ details, shows, anilist, now }) {
     )
     .sort((a, b) => a.number - b.number);
 
+  const seasonTitle = number => {
+    const name = primary?.seasons.find(s => s.number === number)?.name?.trim();
+    return name && !/^\d+$/.test(name) ? `Season ${number}: ${name}` : null;
+  };
+
   let next = null;
   const nextEpisode = upcoming[0];
   if (nextEpisode) {
@@ -95,7 +104,7 @@ function deriveSeriesInfo({ details, shows, anilist, now }) {
       kind: opensSeason ? 'season' : 'episode',
       season: nextEpisode.season,
       episode: nextEpisode.number,
-      title: null,
+      title: opensSeason ? seasonTitle(nextEpisode.season) : null,
       date: when(nextEpisode).slice(0, 10),
       precision: 'day',
     };
@@ -105,7 +114,7 @@ function deriveSeriesInfo({ details, shows, anilist, now }) {
       kind: 'season',
       season: s.number,
       episode: null,
-      title: null,
+      title: seasonTitle(s.number),
       date: s.premiereDate ?? null,
       precision: s.premiereDate ? 'day' : null,
     };
@@ -116,14 +125,14 @@ function deriveSeriesInfo({ details, shows, anilist, now }) {
     if (!next) {
       next = {
         kind: 'season',
-        season: aniSeason.title ? null : currentSeason + 1,
+        season: currentSeason + 1,
         episode: null,
         title: aniSeason.title,
         date: aniSeason.date,
         precision: aniSeason.precision,
       };
     } else {
-      next.title = aniSeason.title;
+      next.title ??= aniSeason.title;
       if (morePrecise(aniSeason.precision, next.precision)) {
         next.date = aniSeason.date;
         next.precision = aniSeason.precision;
@@ -138,6 +147,7 @@ function deriveSeriesInfo({ details, shows, anilist, now }) {
     anilist?.film ??
     (tvmazeFilm
       ? {
+          id: `tvmaze:${tvmazeFilm.id}`,
           title: tvmazeFilm.name,
           date: tvmazeFilm.airdate ?? null,
           precision: tvmazeFilm.airdate ? 'day' : null,
@@ -192,17 +202,18 @@ function deriveSeriesInfo({ details, shows, anilist, now }) {
 }
 
 function upcomingReleases({ details, shows, now }) {
-  const nowIso = now.toISOString();
   return shows
     .flatMap(s => s.episodes)
-    .filter(e => e.type === 'regular' && e.airstamp && e.airstamp > nowIso)
-    .map(e => ({
+    .filter(e => e.type === 'regular' && e.airstamp)
+    .map(e => ({ e, airstamp: new Date(e.airstamp) }))
+    .filter(({ airstamp }) => airstamp > now)
+    .map(({ e, airstamp }) => ({
       id: String(e.id),
       tmdbId: details.id,
       season: e.season,
       episode: e.number,
       name: e.name ?? null,
-      airstamp: e.airstamp,
+      airstamp,
     }));
 }
 
@@ -221,6 +232,7 @@ function formatDate({ date, precision }) {
 }
 
 function sameSeason(a, b) {
+  if (a.title && b.title && a.title === b.title) return true;
   if (a.season != null && b.season != null) return a.season === b.season;
   return a.title === b.title;
 }
@@ -232,22 +244,24 @@ function diffNotifications(prev, next) {
   const after = next.next?.kind === 'season' ? next.next : null;
   if (after) {
     const label =
-      after.season != null
-        ? `Season ${after.season}`
-        : (after.title ?? 'A new season');
+      after.title ??
+      (after.season != null ? `Season ${after.season}` : 'A new season');
     const date = formatDate(after);
+    const on = after.precision === 'day' ? 'on' : 'in';
+    const premieres = `${label} premieres ${on} ${date}`;
     if (!before || !sameSeason(before, after)) {
-      messages.push(date ? `${label} premieres ${date}` : `${label} announced`);
+      messages.push(date ? premieres : `${label} announced`);
     } else if (after.date && after.date !== before.date) {
       const refined = before.date && after.date.startsWith(before.date);
       messages.push(
-        before.date && !refined
-          ? `${label} moved to ${date}`
-          : `${label} premieres ${date}`,
+        before.date && !refined ? `${label} moved to ${date}` : premieres,
       );
     }
   }
-  if (next.film && next.film.title !== prev.film?.title) {
+  const newFilm =
+    next.film &&
+    (!prev.film || (prev.film.id != null && prev.film.id !== next.film.id));
+  if (newFilm) {
     const name = next.film.title ? `: ${next.film.title}` : '';
     messages.push(
       after

@@ -10,8 +10,9 @@ const fixture = name =>
     fs.readFileSync(path.join(__dirname, 'fixtures', `${name}.json`), 'utf8'),
   );
 
-const bleach = fixture(30984);
-const linked = fixture('30984-override').shows.find(s => s.show.id === 80375);
+const full = fixture(30984);
+const bleach = { ...full, shows: full.shows.filter(s => s.show.id === 1905) };
+const linked = full.shows.find(s => s.show.id === 80375);
 const now = new Date(bleach.fetchedAt);
 const result = show => ({ score: 1, show });
 

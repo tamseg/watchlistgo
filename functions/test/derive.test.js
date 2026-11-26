@@ -8,12 +8,12 @@ const {
   diffNotifications,
 } = require('../tv/derive');
 
-function derive(name) {
+function derive(name, onlyTvmazeId) {
   const file = path.join(__dirname, 'fixtures', `${name}.json`);
   const f = JSON.parse(fs.readFileSync(file, 'utf8'));
   return deriveSeriesInfo({
     details: f.details,
-    shows: f.shows,
+    shows: f.shows.filter(s => !onlyTvmazeId || s.show.id === onlyTvmazeId),
     anilist: summarizeAnilist(f.anilistNodes),
     now: new Date(f.fetchedAt),
   });
@@ -28,7 +28,7 @@ const EXPECTED = {
   97645: { state: 'ended' },
   65930: { state: 'ended' },
   205715: { state: 'ended' },
-  '30984-override': { state: 'ended' },
+  30984: { state: 'ended' },
   95557: { state: 'dated', date: '2027-02-17', precision: 'day' },
   207332: { state: 'dated', season: 2, precision: 'day' },
   63926: { state: 'dated', date: '2027-01', precision: 'month' },
@@ -78,16 +78,62 @@ test('upcoming anime seasons get a readable label', () => {
   assert.equal(derive(63926).next.title, 'One Punch Man Season 3 Part 2');
 });
 
+test('anime seasons without an English title use the Japanese one', () => {
+  const info = derive(95479);
+  assert.equal(info.next.title, 'Jujutsu Kaisen: Shimetsu Kaiyuu - Kouhen');
+  assert.deepEqual(diffNotifications({ next: null }, info), [
+    'Jujutsu Kaisen: Shimetsu Kaiyuu - Kouhen announced',
+  ]);
+});
+
+test('a TVmaze season name comes first, with its season number', () => {
+  const info = deriveSeriesInfo({
+    details: { id: 1, name: 'Show', seasons: [] },
+    shows: [
+      {
+        show: { id: 9, status: 'Running', premiered: '2020-01-01' },
+        seasons: [
+          { number: 1, name: '', premiereDate: '2020-01-01' },
+          { number: 2, name: 'The Calamity', premiereDate: null },
+        ],
+        episodes: [
+          {
+            id: 1,
+            season: 1,
+            number: 1,
+            type: 'regular',
+            airdate: '2020-01-01',
+          },
+        ],
+      },
+    ],
+    anilist: { season: { title: 'Show 2nd Season', date: '2027' } },
+    now: new Date('2026-11-26T12:00:00Z'),
+  });
+  assert.equal(info.next.title, 'Season 2: The Calamity');
+});
+
+test('a TVmaze season name made of digits is ignored', () => {
+  const info = derive(207332);
+  assert.equal(info.next.title, 'SAKAMOTO DAYS Season 2');
+});
+
+test('adding a title to a known season does not notify again', () => {
+  const before = show(season(4, null, null));
+  const after = show({ ...season(4, null, null), title: 'Part 2' });
+  assert.deepEqual(diffNotifications(before, after), []);
+});
+
 test('a show with listed future episodes is not flagged', () => {
   assert.equal(derive(95557).mappingWarning, null);
 });
 
 test('Bleach mapped to one TVmaze show is flagged', () => {
-  assert.equal(derive(30984).mappingWarning, 'episodeCountMismatch');
+  assert.equal(derive(30984, 1905).mappingWarning, 'episodeCountMismatch');
 });
 
 test('Bleach with both TVmaze shows has every episode', () => {
-  const info = derive('30984-override');
+  const info = derive(30984);
   const total = info.seasons.reduce((sum, s) => sum + s.released, 0);
   assert.equal(total, 416);
   assert.equal(info.mappingWarning, null);
@@ -115,7 +161,7 @@ test('a new date notifies with the date', () => {
   const before = show(season(2, null, null));
   const after = show(season(2, '2027-01-18', 'day'));
   assert.deepEqual(diffNotifications(before, after), [
-    'Season 2 premieres Jan 18, 2027',
+    'Season 2 premieres on Jan 18, 2027',
   ]);
 });
 
@@ -123,7 +169,7 @@ test('a more precise date is not reported as moved', () => {
   const before = show(season(2, '2027', 'year'));
   const after = show(season(2, '2027-10', 'month'));
   assert.deepEqual(diffNotifications(before, after), [
-    'Season 2 premieres Oct 2027',
+    'Season 2 premieres in Oct 2027',
   ]);
 });
 
@@ -144,5 +190,25 @@ test('a continuation film without a new season notifies', () => {
   const after = { ...show(null), film: { title: 'The Movie' } };
   assert.deepEqual(diffNotifications(show(null), after), [
     'No new season yet, but a movie is coming: The Movie',
+  ]);
+});
+
+test('a known film whose title changes does not notify again', () => {
+  const film = title => ({ ...show(null), film: { id: 'anilist:1', title } });
+  assert.deepEqual(diffNotifications(film(null), film('Kanketsu-hen')), []);
+  assert.deepEqual(diffNotifications(film('Kanketsu-hen'), film('Final')), []);
+});
+
+test('a known film stored before films had IDs does not notify', () => {
+  const before = { ...show(null), film: { title: null } };
+  const after = { ...show(null), film: { id: 'anilist:1', title: 'Film' } };
+  assert.deepEqual(diffNotifications(before, after), []);
+});
+
+test('a different film notifies', () => {
+  const before = { ...show(null), film: { id: 'anilist:1', title: 'One' } };
+  const after = { ...show(null), film: { id: 'anilist:2', title: 'Two' } };
+  assert.deepEqual(diffNotifications(before, after), [
+    'No new season yet, but a movie is coming: Two',
   ]);
 });

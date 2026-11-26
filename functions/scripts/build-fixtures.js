@@ -8,8 +8,6 @@ process.env.TMDB_ACCESS_TOKEN = env
 
 const { resolveSeries } = require('../tv/resolve');
 
-const OVERRIDES = { 30984: [1905, 80375] };
-
 const pick = (obj, keys) =>
   Object.fromEntries(keys.map(k => [k, obj[k] ?? null]));
 
@@ -18,16 +16,8 @@ async function main() {
   const outDir = path.join(__dirname, '..', 'test', 'fixtures');
   fs.mkdirSync(outDir, { recursive: true });
   const fetchedAt = new Date().toISOString();
-  const jobs = [
-    ...library.map(({ tmdbId }) => ({ tmdbId, name: tmdbId })),
-    ...Object.entries(OVERRIDES).map(([tmdbId, tvmazeIds]) => ({
-      tmdbId: Number(tmdbId),
-      name: `${tmdbId}-override`,
-      override: { tvmazeIds },
-    })),
-  ];
-  for (const { tmdbId, name, override } of jobs) {
-    const r = await resolveSeries(tmdbId, { override, withAnilist: true });
+  for (const { tmdbId } of library) {
+    const r = await resolveSeries(tmdbId, { withAnilist: true });
     const fixture = {
       fetchedAt,
       details: {
@@ -50,7 +40,13 @@ async function main() {
       shows: r.shows.map(s => ({
         show: pick(s.show, ['id', 'name', 'status', 'premiered']),
         seasons: s.seasons.map(x =>
-          pick(x, ['number', 'premiereDate', 'endDate', 'episodeOrder']),
+          pick(x, [
+            'number',
+            'name',
+            'premiereDate',
+            'endDate',
+            'episodeOrder',
+          ]),
         ),
         episodes: s.episodes.map(x =>
           pick(x, [
@@ -68,7 +64,7 @@ async function main() {
       anilistNodes: r.anilistNodes,
     };
     fs.writeFileSync(
-      path.join(outDir, `${name}.json`),
+      path.join(outDir, `${tmdbId}.json`),
       JSON.stringify(fixture),
     );
     const ids = r.shows.map(s => s.show.id).join(',') || 'unmapped';
