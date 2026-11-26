@@ -68,12 +68,6 @@ class _ViewTab extends StatelessWidget {
         ),
       ],
     );
-    final textWidth = (TextPainter(
-      text: text,
-      textDirection: Directionality.of(context),
-      textScaler: MediaQuery.textScalerOf(context),
-    )..layout()).width;
-
     return Semantics(
       button: true,
       selected: selected,
@@ -86,25 +80,20 @@ class _ViewTab extends StatelessWidget {
           padding: const EdgeInsets.only(right: 24.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.end,
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text.rich(text),
-              const SizedBox(height: 2),
-              SizedBox(
-                width: textWidth,
-                child: Align(
-                  alignment: selected
-                      ? Alignment.centerLeft
-                      : Alignment.centerRight,
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    height: 2,
-                    width: selected ? textWidth : 0,
-                    decoration: BoxDecoration(
-                      color: AppTheme.navActiveColor,
-                      borderRadius: BorderRadius.circular(1),
-                    ),
+              TweenAnimationBuilder<double>(
+                tween: Tween(end: selected ? 1 : 0),
+                duration: const Duration(milliseconds: 300),
+                builder: (context, progress, child) => CustomPaint(
+                  foregroundPainter: _UnderlinePainter(
+                    progress: progress,
+                    fromLeft: selected,
                   ),
+                  child: child,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Text.rich(text),
                 ),
               ),
               const SizedBox(height: 6),
@@ -114,4 +103,32 @@ class _ViewTab extends StatelessWidget {
       ),
     );
   }
+}
+
+class _UnderlinePainter extends CustomPainter {
+  final double progress;
+  final bool fromLeft;
+
+  const _UnderlinePainter({required this.progress, required this.fromLeft});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (progress <= 0) return;
+    final width = size.width * progress;
+    final left = fromLeft ? 0.0 : size.width - width;
+    canvas.drawRRect(
+      RRect.fromLTRBR(
+        left,
+        size.height - 2,
+        left + width,
+        size.height,
+        const Radius.circular(1),
+      ),
+      Paint()..color = AppTheme.navActiveColor,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_UnderlinePainter old) =>
+      old.progress != progress || old.fromLeft != fromLeft;
 }
