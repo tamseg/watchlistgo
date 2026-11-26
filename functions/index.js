@@ -3,8 +3,21 @@ const { initializeApp } = require('firebase-admin/app');
 const { getFirestore } = require('firebase-admin/firestore');
 const { getMessaging } = require('firebase-admin/messaging');
 const axios = require('axios');
+const { refreshSeries } = require('./tv/refresh');
 
 initializeApp();
+
+exports.refreshSeries = functions.scheduler.onSchedule(
+  {
+    region: 'europe-west3',
+    schedule: '30 7,13,19 * * *',
+    timeoutSeconds: 540,
+    memory: '256MiB',
+  },
+  async () => {
+    await refreshSeries({ db: getFirestore(), dryRun: true });
+  },
+);
 
 const TMDB_ACCESS_TOKEN = process.env.TMDB_ACCESS_TOKEN;
 
