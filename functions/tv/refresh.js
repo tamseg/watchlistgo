@@ -1,6 +1,6 @@
 const { FieldValue } = require('firebase-admin/firestore');
 const { tvmaze } = require('./providers');
-const { resolveSeries } = require('./resolve');
+const { resolveSeries, prefetchAnilistChains } = require('./resolve');
 const { followerFids, sendPush } = require('./push');
 const { isFollowing, followedSeriesIds } = require('./followers');
 const { takeQuota } = require('./quota');
@@ -15,6 +15,7 @@ const HOUR = 3600 * 1000;
 const FULL_REFRESH_AGE = 7 * 24 * HOUR;
 const ANILIST_REFRESH_AGE = 20 * HOUR;
 const REQUESTED_FOR = 30 * 24 * HOUR;
+const READ_BATCH = 300;
 
 const toDate = value => (value?.toDate ? value.toDate() : (value ?? null));
 const olderThan = (value, ms, now) => !value || now - toDate(value) > ms;
@@ -33,6 +34,17 @@ function refreshDue(prev, updatedIds, now) {
   if (prev.tvmazeIds?.some(id => updatedIds.has(String(id)))) return true;
   if (prev.next?.precision === 'day' && prev.next.date <= today) return true;
   return olderThan(prev.refreshedAt, FULL_REFRESH_AGE, now);
+}
+
+async function readSeriesInfo(db, ids) {
+  const docs = [];
+  for (let i = 0; i < ids.length; i += READ_BATCH) {
+    const refs = ids
+      .slice(i, i + READ_BATCH)
+      .map(id => db.doc(`seriesInfo/${id}`));
+    if (refs.length) docs.push(...(await db.getAll(...refs)));
+  }
+  return docs.map(doc => doc.data());
 }
 
 async function requestedSeriesIds(db, now) {
@@ -60,7 +72,14 @@ async function saveReleases(db, releases) {
   await batch.commit();
 }
 
-async function refreshShow({ db, tmdbId, prev, withAnilist, now }) {
+async function refreshShow({
+  db,
+  tmdbId,
+  prev,
+  withAnilist,
+  now,
+  anilistCache,
+}) {
   const ref = db.collection('seriesInfo').doc(String(tmdbId));
   const override = (
     await db.collection('seriesMappingOverrides').doc(String(tmdbId)).get()
@@ -70,6 +89,7 @@ async function refreshShow({ db, tmdbId, prev, withAnilist, now }) {
     override,
     withAnilist,
     now,
+    anilistCache,
   });
   const anilist = resolved.anilistNodes
     ? summarizeAnilist(resolved.anilistNodes)
@@ -149,18 +169,40 @@ async function refreshSeries({
   ];
   const updates = (await tvmaze('/updates/shows?since=day')) ?? {};
   const updatedIds = new Set(Object.keys(updates));
+  const prevs = await readSeriesInfo(db, ids);
+  const due = [];
+  ids.forEach((tmdbId, i) => {
+    const prev = prevs[i];
+    const withAnilist = anilistDue(prev, now);
+    if (withAnilist || refreshDue(prev, updatedIds, now)) {
+      due.push({ tmdbId, prev, withAnilist });
+    }
+  });
+
+  const anilistCache = new Map();
+  const starts = due
+    .filter(d => d.withAnilist && d.prev?.anime)
+    .map(d => d.prev.anilistFrontierId ?? d.prev.anilistRootId);
+  try {
+    await prefetchAnilistChains(starts, anilistCache);
+  } catch (e) {
+    log(`AniList prefetch failed: ${e.message}`);
+  }
+
   const notifications = [];
   let refreshed = 0;
-
-  for (const tmdbId of ids) {
+  for (const { tmdbId, prev, withAnilist } of due) {
     try {
-      const ref = db.collection('seriesInfo').doc(String(tmdbId));
-      const prev = (await ref.get()).data();
-      const withAnilist = anilistDue(prev, now);
-      if (!withAnilist && !refreshDue(prev, updatedIds, now)) continue;
       if (!prev && !(await takeQuota(db, 1, now))) continue;
       notifications.push(
-        ...(await refreshShow({ db, tmdbId, prev, withAnilist, now })),
+        ...(await refreshShow({
+          db,
+          tmdbId,
+          prev,
+          withAnilist,
+          now,
+          anilistCache,
+        })),
       );
       refreshed++;
     } catch (e) {

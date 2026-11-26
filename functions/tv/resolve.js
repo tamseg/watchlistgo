@@ -12,6 +12,7 @@ const MEDIA_WITH_RELATIONS = `${MEDIA_FIELDS}
   relations { edges { relationType node { ${MEDIA_FIELDS} } } }`;
 const SEASON_FORMATS = ['TV', 'TV_SHORT', 'ONA'];
 const MAX_ANILIST_NODES = 30;
+const ANILIST_BATCH = 50;
 
 const isAnime = details =>
   (details.origin_country ?? []).includes('JP') &&
@@ -30,12 +31,15 @@ async function findTvmazeId(externalIds) {
 }
 
 async function fetchTvmazeShow(id) {
-  const [show, seasons, episodes] = await Promise.all([
-    tvmaze(`/shows/${id}`),
-    tvmaze(`/shows/${id}/seasons`),
-    tvmaze(`/shows/${id}/episodes?specials=1`),
-  ]);
-  return { show, seasons, episodes };
+  const embed = 'embed[]=seasons&embed[]=episodeswithspecials';
+  const { _embedded: embedded, ...show } = await tvmaze(
+    `/shows/${id}?${embed}`,
+  );
+  return {
+    show,
+    seasons: embedded?.seasons ?? [],
+    episodes: embedded?.episodeswithspecials ?? [],
+  };
 }
 
 async function linkMissingShows(details, shows, now) {
@@ -87,27 +91,58 @@ async function findAnilistRoot(details) {
   return root?.id ?? null;
 }
 
-async function fetchAnilistSequels(startId) {
+const BATCH_QUERY = `query ($ids: [Int]) {
+  Page(perPage: ${ANILIST_BATCH}) {
+    media(id_in: $ids, type: ANIME) { ${MEDIA_WITH_RELATIONS} }
+  }
+}`;
+
+async function prefetchAnilist(ids, cache, query = anilist) {
+  const missing = [...new Set(ids)].filter(id => id && !cache.has(id));
+  for (let i = 0; i < missing.length; i += ANILIST_BATCH) {
+    const ids = missing.slice(i, i + ANILIST_BATCH);
+    const data = await query(BATCH_QUERY, { ids });
+    for (const media of data.Page.media) cache.set(media.id, media);
+  }
+}
+
+const sequelIds = media =>
+  media.relations.edges
+    .filter(e => e.relationType === 'SEQUEL' && e.node.type === 'ANIME')
+    .map(e => e.node.id);
+
+async function prefetchAnilistChains(startIds, cache, query = anilist) {
+  const seen = new Set(startIds);
+  let level = [...seen];
+  while (level.length) {
+    await prefetchAnilist(level, cache, query);
+    const next = level
+      .flatMap(id => (cache.has(id) ? sequelIds(cache.get(id)) : []))
+      .filter(id => !seen.has(id));
+    next.forEach(id => seen.add(id));
+    level = [...new Set(next)];
+  }
+}
+
+async function fetchAnilistSequels(startId, cache, query = anilist) {
   const nodes = [];
-  const queue = [startId];
-  const seen = new Set(queue);
-  while (queue.length && nodes.length < MAX_ANILIST_NODES) {
-    const data = await anilist(
-      `query ($id: Int) { Media(id: $id) { ${MEDIA_WITH_RELATIONS} } }`,
-      { id: queue.shift() },
-    );
-    const { relations, ...media } = data.Media;
-    nodes.push(media);
-    for (const edge of relations.edges) {
-      if (
-        edge.relationType !== 'SEQUEL' ||
-        edge.node.type !== 'ANIME' ||
-        seen.has(edge.node.id)
-      )
-        continue;
-      seen.add(edge.node.id);
-      queue.push(edge.node.id);
+  const seen = new Set([startId]);
+  let level = [startId];
+  while (level.length && nodes.length < MAX_ANILIST_NODES) {
+    await prefetchAnilist(level, cache, query);
+    const next = [];
+    for (const id of level) {
+      const found = cache.get(id);
+      if (!found) continue;
+      const { relations, ...media } = found;
+      nodes.push(media);
+      for (const sequel of sequelIds(found)) {
+        if (seen.has(sequel)) continue;
+        seen.add(sequel);
+        next.push(sequel);
+      }
     }
+    level = next;
   }
   return nodes;
 }
@@ -130,7 +165,13 @@ function anilistFrontier(nodes) {
 
 async function resolveSeries(
   tmdbId,
-  { previous, override, withAnilist, now = new Date() },
+  {
+    previous,
+    override,
+    withAnilist,
+    now = new Date(),
+    anilistCache = new Map(),
+  },
 ) {
   const details = await tmdb(`/tv/${tmdbId}?append_to_response=external_ids`);
   if (!details) throw new Error(`TMDB show ${tmdbId} not found`);
@@ -160,7 +201,7 @@ async function resolveSeries(
     anilistRootId ??= await findAnilistRoot(details);
     const start = anilistFrontierId ?? anilistRootId;
     if (start) {
-      anilistNodes = await fetchAnilistSequels(start);
+      anilistNodes = await fetchAnilistSequels(start, anilistCache);
       anilistFrontierId = anilistFrontier(anilistNodes) ?? start;
     }
   }
@@ -176,4 +217,10 @@ async function resolveSeries(
   };
 }
 
-module.exports = { resolveSeries, isAnime };
+module.exports = {
+  resolveSeries,
+  isAnime,
+  prefetchAnilist,
+  prefetchAnilistChains,
+  fetchAnilistSequels,
+};
