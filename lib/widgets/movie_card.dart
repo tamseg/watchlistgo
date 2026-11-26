@@ -1,4 +1,5 @@
 import 'package:material_ui/material_ui.dart';
+import '../models/movie_status.dart';
 import '../services/tmdb_service.dart';
 import '../screens/movie_detail_page.dart';
 import '../theme/app_theme.dart';
@@ -99,15 +100,18 @@ class _MovieCardState extends State<MovieCard>
             ? 'https://image.tmdb.org/t/p/w200$posterPath'
             : null;
 
-        final releaseDate = data['release_date'] ?? 'N/A';
+        final release = movieReleaseLine(
+          data['release_date'] as String?,
+          DateTime.now(),
+        );
         final theme = Theme.of(context).textTheme;
 
         final subtitleWidget = Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Released:', style: theme.labelMedium),
-            Text(releaseDate, style: theme.bodyMedium),
+            Text(release.label, style: theme.labelMedium),
+            Text(release.value, style: theme.bodyMedium),
           ],
         );
 
