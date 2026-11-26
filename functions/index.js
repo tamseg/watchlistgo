@@ -6,6 +6,7 @@ const { onCall } = require('firebase-functions/v2/https');
 const { requestSeries } = require('./tv/request');
 const { refreshSeries, resolveNewFollow } = require('./tv/refresh');
 const { releaseEpisodes } = require('./tv/release');
+const { followChanged, updateFollowerCount } = require('./tv/followers');
 const { notifyMovieReleases } = require('./movies');
 
 initializeApp();
@@ -32,12 +33,12 @@ exports.resolveFollowedSeries = onDocumentWritten(
     memory: '256MiB',
   },
   async event => {
-    await resolveNewFollow({
-      db: getFirestore(),
-      tmdbId: Number(event.params.tmdbId),
-      before: event.data?.before?.data(),
-      after: event.data?.after?.data(),
-    });
+    const db = getFirestore();
+    const tmdbId = Number(event.params.tmdbId);
+    const before = event.data?.before?.data();
+    const after = event.data?.after?.data();
+    if (followChanged(before, after)) await updateFollowerCount(db, tmdbId);
+    await resolveNewFollow({ db, tmdbId, before, after });
   },
 );
 

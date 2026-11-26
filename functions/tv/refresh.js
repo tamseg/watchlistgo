@@ -2,6 +2,7 @@ const { FieldValue } = require('firebase-admin/firestore');
 const { tvmaze } = require('./providers');
 const { resolveSeries } = require('./resolve');
 const { followerFids, sendPush } = require('./push');
+const { isFollowing, followedSeriesIds } = require('./followers');
 const {
   deriveSeriesInfo,
   summarizeAnilist,
@@ -31,16 +32,6 @@ function refreshDue(prev, updatedIds, now) {
   if (prev.tvmazeIds?.some(id => updatedIds.has(String(id)))) return true;
   if (prev.next?.precision === 'day' && prev.next.date <= today) return true;
   return olderThan(prev.refreshedAt, FULL_REFRESH_AGE, now);
-}
-
-async function followedSeriesIds(db) {
-  const snap = await db
-    .collectionGroup('series')
-    .where('removed', '==', false)
-    .get();
-  return [
-    ...new Set(snap.docs.map(doc => Number(doc.get('tmdbId') ?? doc.id))),
-  ];
 }
 
 async function requestedSeriesIds(db, now) {
@@ -115,8 +106,6 @@ async function refreshShow({ db, tmdbId, prev, withAnilist, now }) {
     backdropPath,
   }));
 }
-
-const isFollowing = record => !!record && record.removed !== true;
 
 async function resolveNewFollow({ db, tmdbId, before, after, now }) {
   if (!isFollowing(after) || isFollowing(before)) return false;
