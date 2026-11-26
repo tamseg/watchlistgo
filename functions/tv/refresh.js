@@ -58,6 +58,75 @@ async function saveReleases(db, releases) {
   await batch.commit();
 }
 
+async function refreshShow({ db, tmdbId, prev, withAnilist, now }) {
+  const ref = db.collection('seriesInfo').doc(String(tmdbId));
+  const override = (
+    await db.collection('seriesMappingOverrides').doc(String(tmdbId)).get()
+  ).data();
+  const resolved = await resolveSeries(tmdbId, {
+    previous: prev,
+    override,
+    withAnilist,
+    now,
+  });
+  const anilist = resolved.anilistNodes
+    ? summarizeAnilist(resolved.anilistNodes)
+    : (prev?.anilist ?? null);
+  const info = deriveSeriesInfo({
+    details: resolved.details,
+    shows: resolved.shows,
+    anilist,
+    now,
+  });
+  const backdropPath = resolved.details.backdrop_path ?? null;
+
+  await ref.set({
+    ...info,
+    backdropPath,
+    mappedBy: resolved.mappedBy ?? null,
+    anime: resolved.anime,
+    anilist,
+    anilistRootId: resolved.anilistRootId,
+    anilistFrontierId: resolved.anilistFrontierId,
+    anilistCheckedAt: resolved.anilistNodes
+      ? now
+      : (prev?.anilistCheckedAt ?? null),
+    refreshedAt: now,
+    updatedAt: FieldValue.serverTimestamp(),
+  });
+  await saveReleases(
+    db,
+    upcomingReleases({ details: resolved.details, shows: resolved.shows, now }),
+  );
+  return diffNotifications(prev, info).map(body => ({
+    tmdbId,
+    title: info.name,
+    body,
+    backdropPath,
+  }));
+}
+
+const isFollowing = record => !!record && record.removed !== true;
+
+async function resolveNewFollow({ db, tmdbId, before, after, now }) {
+  if (!isFollowing(after) || isFollowing(before)) return false;
+  const ref = db.doc(`seriesInfo/${tmdbId}`);
+  if ((await ref.get()).exists) return false;
+  const at = now ?? new Date();
+  await refreshShow({
+    db,
+    tmdbId,
+    prev: undefined,
+    withAnilist: false,
+    now: at,
+  });
+  const first = (await ref.get()).data();
+  if (first?.anime) {
+    await refreshShow({ db, tmdbId, prev: first, withAnilist: true, now: at });
+  }
+  return true;
+}
+
 async function refreshSeries({
   db,
   now = new Date(),
@@ -76,51 +145,8 @@ async function refreshSeries({
       const prev = (await ref.get()).data();
       const withAnilist = anilistDue(prev, now);
       if (!withAnilist && !refreshDue(prev, updatedIds, now)) continue;
-
-      const override = (
-        await db.collection('seriesMappingOverrides').doc(String(tmdbId)).get()
-      ).data();
-      const resolved = await resolveSeries(tmdbId, {
-        previous: prev,
-        override,
-        withAnilist,
-        now,
-      });
-      const anilist = resolved.anilistNodes
-        ? summarizeAnilist(resolved.anilistNodes)
-        : (prev?.anilist ?? null);
-      const info = deriveSeriesInfo({
-        details: resolved.details,
-        shows: resolved.shows,
-        anilist,
-        now,
-      });
-
-      const backdropPath = resolved.details.backdrop_path ?? null;
-      for (const body of diffNotifications(prev, info))
-        notifications.push({ tmdbId, title: info.name, body, backdropPath });
-
-      await ref.set({
-        ...info,
-        backdropPath,
-        mappedBy: resolved.mappedBy ?? null,
-        anime: resolved.anime,
-        anilist,
-        anilistRootId: resolved.anilistRootId,
-        anilistFrontierId: resolved.anilistFrontierId,
-        anilistCheckedAt: resolved.anilistNodes
-          ? now
-          : (prev?.anilistCheckedAt ?? null),
-        refreshedAt: now,
-        updatedAt: FieldValue.serverTimestamp(),
-      });
-      await saveReleases(
-        db,
-        upcomingReleases({
-          details: resolved.details,
-          shows: resolved.shows,
-          now,
-        }),
+      notifications.push(
+        ...(await refreshShow({ db, tmdbId, prev, withAnilist, now })),
       );
       refreshed++;
     } catch (e) {
@@ -154,4 +180,9 @@ async function refreshSeries({
   return notifications;
 }
 
-module.exports = { refreshSeries, refreshDue, anilistDue };
+module.exports = {
+  refreshSeries,
+  resolveNewFollow,
+  refreshDue,
+  anilistDue,
+};

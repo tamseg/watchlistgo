@@ -1,7 +1,8 @@
 const functions = require('firebase-functions/v2');
 const { initializeApp } = require('firebase-admin/app');
 const { getFirestore } = require('firebase-admin/firestore');
-const { refreshSeries } = require('./tv/refresh');
+const { onDocumentWritten } = require('firebase-functions/v2/firestore');
+const { refreshSeries, resolveNewFollow } = require('./tv/refresh');
 const { releaseEpisodes } = require('./tv/release');
 const { notifyMovieReleases } = require('./movies');
 
@@ -18,6 +19,23 @@ exports.refreshSeries = functions.scheduler.onSchedule(
   },
   async () => {
     await refreshSeries({ db: getFirestore(), dryRun: false });
+  },
+);
+
+exports.resolveFollowedSeries = onDocumentWritten(
+  {
+    document: 'users/{uid}/series/{tmdbId}',
+    region: 'me-west1',
+    timeoutSeconds: 120,
+    memory: '256MiB',
+  },
+  async event => {
+    await resolveNewFollow({
+      db: getFirestore(),
+      tmdbId: Number(event.params.tmdbId),
+      before: event.data?.before?.data(),
+      after: event.data?.after?.data(),
+    });
   },
 );
 

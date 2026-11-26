@@ -1,6 +1,31 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { refreshDue, anilistDue } = require('../tv/refresh');
+const { refreshDue, anilistDue, resolveNewFollow } = require('../tv/refresh');
+
+const dbWithInfo = exists => ({
+  doc: () => ({ get: async () => ({ exists }) }),
+});
+
+test('removing or keeping a show does not resolve it', async () => {
+  const db = dbWithInfo(false);
+  const following = { removed: false };
+  const removed = { removed: true };
+  const call = (before, after) =>
+    resolveNewFollow({ db, tmdbId: 1, before, after });
+  assert.equal(await call(following, removed), false);
+  assert.equal(await call(following, undefined), false);
+  assert.equal(await call(following, following), false);
+});
+
+test('a new follow of a known show is not resolved again', async () => {
+  const resolved = await resolveNewFollow({
+    db: dbWithInfo(true),
+    tmdbId: 1,
+    before: { removed: true },
+    after: { removed: false },
+  });
+  assert.equal(resolved, false);
+});
 
 const now = new Date('2026-11-26T12:00:00Z');
 const recent = new Date('2026-11-26T10:00:00Z');
