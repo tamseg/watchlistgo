@@ -1,7 +1,7 @@
 import 'package:material_ui/material_ui.dart';
-import '../models/series_info.dart';
 import '../models/series_status.dart';
 import '../services/series_info_service.dart';
+import 'series_info_builder.dart';
 import '../services/tmdb_service.dart';
 import '../screens/series_detail_page.dart';
 import 'media_card.dart';
@@ -20,14 +20,21 @@ class SeriesCard extends StatefulWidget {
 class _SeriesCardState extends State<SeriesCard>
     with AutomaticKeepAliveClientMixin {
   late Future<Map<String, dynamic>?> _seriesData;
-  late Stream<SeriesInfo?> _seriesInfo;
   final TMDBService _tmdbService = TMDBService();
+
+  static const _spinner = Align(
+    alignment: Alignment.centerLeft,
+    child: SizedBox(
+      width: 20,
+      height: 20,
+      child: CircularProgressIndicator(strokeWidth: 2),
+    ),
+  );
 
   @override
   void initState() {
     super.initState();
     _seriesData = _tmdbService.getDetails('tv', widget.seriesId);
-    _seriesInfo = SeriesInfoService().watch(widget.seriesId);
   }
 
   @override
@@ -53,14 +60,11 @@ class _SeriesCardState extends State<SeriesCard>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return StreamBuilder<SeriesInfo?>(
-      stream: _seriesInfo,
-      builder: (context, infoSnapshot) =>
-          _buildCard(context, infoSnapshot.data),
-    );
+    return SeriesInfoBuilder(seriesId: widget.seriesId, builder: _buildCard);
   }
 
-  Widget _buildCard(BuildContext context, SeriesInfo? info) {
+  Widget _buildCard(BuildContext context, SeriesInfoState infoState) {
+    final info = infoState.info;
     return FutureBuilder<Map<String, dynamic>?>(
       future: _seriesData,
       initialData: _tmdbService.peekDetails('tv', widget.seriesId),
@@ -107,6 +111,8 @@ class _SeriesCardState extends State<SeriesCard>
             seriesStatusLine(info, seriesTitle),
             theme,
           );
+        } else if (infoState.status == SeriesInfoStatus.loading) {
+          subtitleWidget = _spinner;
         } else if (nextEpisode != null) {
           final s = nextEpisode['season_number'];
           final e = nextEpisode['episode_number'];

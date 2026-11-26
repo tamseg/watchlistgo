@@ -2,11 +2,11 @@ import 'package:material_ui/material_ui.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../theme/app_theme.dart';
-import '../models/series_info.dart';
 import '../models/series_status.dart';
 import '../services/series_info_service.dart';
 import '../services/tmdb_service.dart';
 import '../widgets/logo_widget.dart';
+import '../widgets/series_info_builder.dart';
 
 class SeriesDetailPage extends StatefulWidget {
   final int seriesId;
@@ -19,7 +19,6 @@ class SeriesDetailPage extends StatefulWidget {
 class _SeriesDetailPageState extends State<SeriesDetailPage> {
   late Future<Map<String, dynamic>?> _seriesData;
   late Future<Map<String, dynamic>?> _seriesImages;
-  late Stream<SeriesInfo?> _seriesInfo;
   final TMDBService _tmdbService = TMDBService();
 
   @override
@@ -27,7 +26,6 @@ class _SeriesDetailPageState extends State<SeriesDetailPage> {
     super.initState();
     _seriesData = _tmdbService.getDetails('tv', widget.seriesId);
     _seriesImages = _tmdbService.getImages('tv', widget.seriesId);
-    _seriesInfo = SeriesInfoService().watch(widget.seriesId);
   }
 
   @override
@@ -110,10 +108,9 @@ class _SeriesDetailPageState extends State<SeriesDetailPage> {
                           ],
                         ),
                         const SizedBox(height: 12),
-                        StreamBuilder<SeriesInfo?>(
-                          stream: _seriesInfo,
-                          builder: (context, info) =>
-                              _buildStatus(data, info.data),
+                        SeriesInfoBuilder(
+                          seriesId: widget.seriesId,
+                          builder: (context, info) => _buildStatus(data, info),
                         ),
                         const SizedBox(height: 12),
                         Text(
@@ -214,7 +211,15 @@ class _SeriesDetailPageState extends State<SeriesDetailPage> {
     );
   }
 
-  Widget _buildStatus(Map<String, dynamic> data, SeriesInfo? info) {
+  Widget _buildStatus(Map<String, dynamic> data, SeriesInfoState state) {
+    if (state.status == SeriesInfoStatus.loading) {
+      return const SizedBox(
+        width: 20,
+        height: 20,
+        child: CircularProgressIndicator(strokeWidth: 2),
+      );
+    }
+    final info = state.info;
     final String summary;
     final List<String> badges;
     if (info != null) {
