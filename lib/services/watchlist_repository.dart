@@ -19,6 +19,8 @@ class WatchlistRepository {
   final String? Function() _currentUid;
   final Future<String?> Function() _restoredUid;
   final DateTime Function() _now;
+  final Future<void> Function(List<int> ids) _requestSeries;
+  final Future<void> Function(List<int> ids) _requestSeriesDaily;
   final PendingSyncQueue _queue = PendingSyncQueue();
   final LibraryStore _store = LibraryStore();
 
@@ -38,7 +40,11 @@ class WatchlistRepository {
     String? Function()? currentUid,
     Future<String?> Function()? restoredUid,
     DateTime Function()? now,
+    Future<void> Function(List<int> ids)? requestSeries,
+    Future<void> Function(List<int> ids)? requestSeriesDaily,
   }) : _db = db,
+       _requestSeries = requestSeries ?? _ignoreRequest,
+       _requestSeriesDaily = requestSeriesDaily ?? _ignoreRequest,
        _connectivity = connectivity,
        _currentUid =
            currentUid ?? (() => FirebaseAuth.instance.currentUser?.uid),
@@ -47,6 +53,8 @@ class WatchlistRepository {
            (() async =>
                (await FirebaseAuth.instance.authStateChanges().first)?.uid),
        _now = now ?? (() => DateTime.now().toUtc());
+
+  static Future<void> _ignoreRequest(List<int> ids) async {}
 
   Stream<List<int>> get seriesStream => _seriesController.stream;
   Stream<List<MovieRecord>> get moviesStream => _moviesController.stream;
@@ -88,7 +96,11 @@ class WatchlistRepository {
 
   Future<void> _syncWithCloudOnStartup() async {
     final uid = await _restoredUid();
-    if (uid == null || !await _connectivity.isConnected) return;
+    if (uid == null) {
+      unawaited(_requestSeriesDaily(currentSeriesIds));
+      return;
+    }
+    if (!await _connectivity.isConnected) return;
 
     try {
       await _syncWithCloud(
@@ -159,6 +171,7 @@ class WatchlistRepository {
       addedAt: _now(),
     );
     await _changed(TitleKind.series, id);
+    if (_uid == null) unawaited(_requestSeries([id]));
   }
 
   Future<void> removeSeries(int id) async {

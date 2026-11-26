@@ -42,8 +42,17 @@ class Harness {
   final FakeConnectivity connectivity;
   final WatchlistRepository repository;
   String? signedInUid;
+  final List<List<int>> requested;
+  final List<List<int>> requestedDaily;
 
-  Harness._(this.db, this.connectivity, this.repository, this.signedInUid);
+  Harness._(
+    this.db,
+    this.connectivity,
+    this.repository,
+    this.signedInUid,
+    this.requested,
+    this.requestedDaily,
+  );
 }
 
 Future<Harness> start({
@@ -66,20 +75,58 @@ Future<Harness> start({
   final network = connectivity ?? FakeConnectivity();
   late final Harness harness;
   final clock = TestClock();
+  final requested = <List<int>>[];
+  final requestedDaily = <List<int>>[];
   final repository = WatchlistRepository(
     db: database,
     connectivity: network,
     currentUid: () => harness.signedInUid,
     restoredUid: () async => signedInUid,
     now: clock.now,
+    requestSeries: (ids) async => requested.add(ids),
+    requestSeriesDaily: (ids) async => requestedDaily.add(ids),
   );
-  harness = Harness._(database, network, repository, signedInUid);
+  harness = Harness._(
+    database,
+    network,
+    repository,
+    signedInUid,
+    requested,
+    requestedDaily,
+  );
   await repository.init();
   await repository.startupSync;
   return harness;
 }
 
 void main() {
+  group('series data for signed-out users', () {
+    test('a followed series is requested right away', () async {
+      final h = await start(signedInUid: null);
+      await h.repository.addSeries(7);
+      expect(h.requested, [
+        [7],
+      ]);
+    });
+
+    test('the whole list is requested at startup', () async {
+      final h = await start(
+        signedInUid: null,
+        localSeries: [series(1), series(2, addedMinute: 1)],
+      );
+      expect(h.requestedDaily, [
+        [1, 2],
+      ]);
+    });
+
+    test('signed-in users are resolved by the backend instead', () async {
+      final h = await start(localSeries: [series(1)]);
+      await h.repository.addSeries(7);
+      expect(h.requested, isEmpty);
+      expect(h.requestedDaily, isEmpty);
+    });
+  });
+
   group('local changes', () {
     test('are written as records and to the old lists', () async {
       final h = await start();

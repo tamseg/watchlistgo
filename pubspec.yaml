@@ -32,6 +32,8 @@ dependencies:
   material_ui: any
   mcp_toolkit: ^8.0.0
   shared_preferences_android: ^2.5.5
+  firebase_app_check: ^0.5.2
+  cloud_functions: ^7.1.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
