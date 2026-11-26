@@ -231,6 +231,47 @@ function formatDate({ date, precision }) {
   );
 }
 
+const PART = String.raw`(?:\s+part\s+(\d+))?`;
+const SEASON_PHRASE = new RegExp(
+  String.raw`season\s+(\d+)${PART}|(\d+)(?:st|nd|rd|th)\s+season${PART}`,
+  'i',
+);
+const SEPARATORS = /^[\s:\-–—·]+|[\s:\-–—·]+$/g;
+const alphanumeric = c => /[a-z0-9]/.test(c);
+const normalize = s => (s ?? '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
+function stripShowName(title, showName) {
+  const name = normalize(showName);
+  const lower = title.toLowerCase();
+  if (!name || normalize(title) === name) return '';
+  let matched = 0;
+  let i = 0;
+  for (; i < lower.length && matched < name.length; i++) {
+    if (!alphanumeric(lower[i])) continue;
+    if (lower[i] !== name[matched]) return title;
+    matched++;
+  }
+  if (matched < name.length || (i < lower.length && alphanumeric(lower[i]))) {
+    return title;
+  }
+  return title.slice(i).replace(SEPARATORS, '');
+}
+
+function seasonLabel(next, showName) {
+  const title = next.title ? stripShowName(next.title, showName) : null;
+  const match = title?.match(SEASON_PHRASE);
+  let label = next.season != null ? `Season ${next.season}` : 'New season';
+  if (match) {
+    const number = match[1] ?? match[3];
+    const part = match[2] ?? match[4];
+    label = `Season ${number}${part ? ` Part ${part}` : ''}`;
+  }
+  const extra = (match ? title.replace(match[0], '') : (title ?? ''))
+    .replace(SEPARATORS, '')
+    .trim();
+  return { label, extra: extra || null };
+}
+
 function sameSeason(a, b) {
   if (a.title && b.title && a.title === b.title) return true;
   if (a.season != null && b.season != null) return a.season === b.season;
@@ -243,9 +284,10 @@ function diffNotifications(prev, next) {
   const before = prev.next?.kind === 'season' ? prev.next : null;
   const after = next.next?.kind === 'season' ? next.next : null;
   if (after) {
-    const label =
-      after.title ??
-      (after.season != null ? `Season ${after.season}` : 'A new season');
+    const season = seasonLabel(after, next.name);
+    const label = season.extra
+      ? `${season.label} (${season.extra})`
+      : season.label;
     const date = formatDate(after);
     const on = after.precision === 'day' ? 'on' : 'in';
     const premieres = `${label} premieres ${on} ${date}`;
@@ -281,4 +323,5 @@ module.exports = {
   upcomingReleases,
   diffNotifications,
   formatDate,
+  seasonLabel,
 };

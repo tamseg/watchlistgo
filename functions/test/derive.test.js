@@ -6,6 +6,7 @@ const {
   deriveSeriesInfo,
   summarizeAnilist,
   diffNotifications,
+  seasonLabel,
 } = require('../tv/derive');
 
 function derive(name, onlyTvmazeId) {
@@ -82,8 +83,40 @@ test('anime seasons without an English title use the Japanese one', () => {
   const info = derive(95479);
   assert.equal(info.next.title, 'Jujutsu Kaisen: Shimetsu Kaiyuu - Kouhen');
   assert.deepEqual(diffNotifications({ next: null }, info), [
-    'Jujutsu Kaisen: Shimetsu Kaiyuu - Kouhen announced',
+    'Season 4 (Shimetsu Kaiyuu - Kouhen) announced',
   ]);
+});
+
+test('season labels prefer the number written in the title', () => {
+  const label = (title, season, name) => seasonLabel({ title, season }, name);
+  assert.deepEqual(label('One Punch Man Season 3 Part 2', 4, 'One-Punch Man'), {
+    label: 'Season 3 Part 2',
+    extra: null,
+  });
+  assert.deepEqual(label('Dandadan 3rd Season', 3, 'Dan Da Dan'), {
+    label: 'Season 3',
+    extra: null,
+  });
+  assert.deepEqual(label('SAKAMOTO DAYS Season 2', 2, 'SAKAMOTO DAYS'), {
+    label: 'Season 2',
+    extra: null,
+  });
+  assert.deepEqual(label('Season 4: The Calamity', 4, 'Bleach'), {
+    label: 'Season 4',
+    extra: 'The Calamity',
+  });
+  assert.deepEqual(label('Chainsaw Man: Shikaku-hen', 2, 'Chainsaw Man'), {
+    label: 'Season 2',
+    extra: 'Shikaku-hen',
+  });
+  assert.deepEqual(label('Bleach', 2, 'Bleach'), {
+    label: 'Season 2',
+    extra: null,
+  });
+  assert.deepEqual(label(null, 3, 'Fallout'), {
+    label: 'Season 3',
+    extra: null,
+  });
 });
 
 test('a TVmaze season name comes first, with its season number', () => {
